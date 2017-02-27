@@ -1,0 +1,58 @@
+﻿<Page
+    x:Class="Discord_Mobile.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Discord_Mobile"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Discord_Mobile.ViewModels"
+    mc:Ignorable="d">
+
+    <Page.DataContext>
+        <vm:LoginViewModel x:Name="LoginViewModel"/>
+    </Page.DataContext>
+
+    <Grid Background="#2C2F33">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Visibility="{x:Bind LoginViewModel.LoginUIVisibility, Mode=OneWay}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Image Source="/Assets/Square150x150Logo.png" Stretch="None"/>
+                <TextBox  IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Text="{x:Bind LoginViewModel.TokenTextBox, Mode=TwoWay}" PlaceholderText="Enter your user Token here..."/>
+                <StackPanel Margin="0,10,0,0">
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Button IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Click="{x:Bind LoginViewModel.UserLogin}" Background="#7289DA" Content="Login"/>
+                        <CheckBox Background="White" IsEnabled="{x:Bind  LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Content="Remember Me?" IsChecked="{x:Bind LoginViewModel.RememberMeIsChecked,Mode=TwoWay}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock HorizontalAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind LoginViewModel.ConnectionErrorTextBlock, Mode=OneWay}" Foreground="Crimson" FontWeight="Bold" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+            <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#2C2F33" Background="#7289DA"/>
+            <StackPanel Margin="5,0,0,0" Grid.Row="1">
+                <TextBlock Text="READ ME:" Foreground="Firebrick" FontSize="24" FontWeight="Bold"/>
+                <StackPanel Margin="5,5,0,0">
+                    <TextBlock Foreground="White" FontStyle="Italic">
+                        1. Open Discord
+                        <LineBreak/>
+                        2. Press Ctrl+Shift+i
+                        <LineBreak/>
+                        3. Click &quot;Application&quot; tab
+                        <LineBreak/>
+                        4. Expand Storage > Local Storage > https://discordapp.com
+                        <LineBreak/>
+                        5. Find &quot;token&quot; under &quot;key&quot;
+                        <LineBreak/>
+                        6. Copy the text in quotes on the same row
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Visibility="{x:Bind LoginViewModel.connectingVisibility, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image Margin="10,0,0,10" Source="/Assets/Square150x150Logo.png" Stretch="None" Loaded="{x:Bind LoginViewModel.UserLogin, Mode=OneTime}"/>
+            <TextBlock Margin="30,0,0,10" FontSize="24" Text="{x:Bind LoginViewModel.LoginStatusTextBlock, Mode=OneWay}" FontStyle="Italic" FontWeight="Bold" Foreground="#7289DA"/>
+            <ProgressRing Name="LoadingRing" Width="50" Height="50" IsActive="True"/>
+        </StackPanel>
+    </Grid>
+</Page>

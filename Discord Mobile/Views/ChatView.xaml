@@ -1,0 +1,80 @@
+﻿<Page
+    x:Class="Discord_Mobile.ChatPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Discord_Mobile"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:Discord_Mobile.ViewModels"
+    xmlns:discord="using:Discord.WebSocket"
+    mc:Ignorable="d">
+
+    <Page.DataContext>
+        <vm:ChatViewModel x:Name="ChatViewModel"/>
+    </Page.DataContext>
+
+    <Page.Resources>
+        <Style TargetType="Button" x:Key="TopMenuButtons">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        </Style>
+
+        <DataTemplate x:Key="GuildsListDataTemplate" x:DataType="discord:SocketGuild">
+            <StackPanel>
+                <Ellipse Width="40" Height="40" Margin="0,2,5,0">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="{x:Bind IconUrl, Mode=OneWay}"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <TextBlock Margin="5,5,0,0" Text="{x:Bind Name, Mode=OneWay}" FontSize="12" />
+                </StackPanel>
+        </DataTemplate>
+    </Page.Resources>
+    
+    <Page.BottomAppBar>
+        <CommandBar Foreground="White" Background="#23272A">
+            <CommandBar.Content>
+                <Grid/>
+            </CommandBar.Content>
+            <AppBarButton Foreground="White" Click="{x:Bind ChatViewModel.Disconnect}" Icon="DisconnectDrive" Label="Sign Out"/>
+            <AppBarButton Foreground="White" Icon="Refresh" Label="Refresh Chat"/>
+            <AppBarButton Foreground="White" Icon="Add" Label="Add Channel"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+
+    <Grid Background="#99AAB5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="#23272A"/>
+        <Button HorizontalAlignment="Left" Click="OpenSplitView" Style="{StaticResource TopMenuButtons}" Content="&#xE25C;"/>
+        <StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="{x:Bind ChatViewModel.UserName, Mode=OneWay}" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="{x:Bind ChatViewModel.UserStatus, Mode=OneWay}" FontSize="12" FontWeight="Bold" Margin="5,2,0,0" Foreground="{x:Bind ChatViewModel.userStatusColor, Mode=OneWay}"/>
+                </StackPanel>
+                <Ellipse Loaded="{x:Bind ChatViewModel.SetUser}" Width="40" Height="40" Margin="0,2,5,0">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="{x:Bind ChatViewModel.UserAvatar, Mode=OneWay}"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+            </StackPanel>
+        </StackPanel>
+
+        <SplitView Grid.Row="1" PaneBackground="#2C2F33" IsPaneOpen="False" DisplayMode="CompactOverlay" CompactPaneLength="50" OpenPaneLength="200" Name="ChannelsSplitView">
+            <SplitView.Pane>
+                <ListView Loaded="{x:Bind ChatViewModel.SetGuilds}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource GuildsListDataTemplate}"/>
+            </SplitView.Pane>
+            <SplitView.Content>
+                <ListView>
+                    
+                </ListView>
+            </SplitView.Content>
+        </SplitView>
+    </Grid>
+</Page>
