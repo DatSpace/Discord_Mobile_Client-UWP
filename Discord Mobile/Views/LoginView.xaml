@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="Discord_Mobile.LoginPage"
+    x:Class="Discord_Mobile.LoginView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Discord_Mobile"

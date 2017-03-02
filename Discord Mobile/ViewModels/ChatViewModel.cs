@@ -1,5 +1,4 @@
 ﻿using Discord_Mobile.Services;
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -11,6 +10,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI;
 using System.Collections.Generic;
 using Discord.WebSocket;
+using System.Collections.ObjectModel;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -27,7 +27,6 @@ namespace Discord_Mobile.ViewModels
         }
 
         UserModel user = new UserModel();
-        GuildModel guilds = new GuildModel();
 
         public void SetUser()
         {
@@ -37,16 +36,47 @@ namespace Discord_Mobile.ViewModels
         }
         public void SetGuilds()
         {
-            GuildsList = guilds.GetGuilds();
+            GuildsList = LoginService.client.Guilds;
         }
 
-        public async Task Disconnect()
+        public void SetGuildChannels(object sender, ItemClickEventArgs e)
+        {
+            var guild = (SocketGuild)e.ClickedItem;
+            GuildChannelsList = guild.Channels;
+            TextChannelsList.Clear();
+            VoiceChannelsList.Clear();
+            foreach (SocketGuildChannel channel in GuildChannelsList)
+            {
+                if (channel is SocketTextChannel)
+                {
+                    TextChannelsList.Add(channel);
+                }
+                else
+                {
+                    VoiceChannelsList.Add(channel);
+                }
+            }
+        }
+
+        public async Task SetChannelMessages(object sender, ItemClickEventArgs e)
+        {
+            var channel = (SocketTextChannel)e.ClickedItem;
+            MessageList = await channel.GetMessagesAsync(20).Flatten();
+        }
+
+        public void GoToSettings()
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+            rootFrame.Navigate(typeof(SettingsView));
+        }
+
+        public void Disconnect()
         {
             //LoginService loginService = new LoginService();
             LoginService.DeleteUser();
 
             Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(LoginPage));
+            rootFrame.Navigate(typeof(LoginView));
         }
 
         //######################################################################
@@ -129,6 +159,45 @@ namespace Discord_Mobile.ViewModels
                 {
                     guildsList = value;
                     NotifyPropertyChanged("GuildsList");
+                }
+            }
+        }
+
+        private IReadOnlyCollection<SocketGuildChannel> guildChannelsList = null;
+
+        public IReadOnlyCollection<SocketGuildChannel> GuildChannelsList
+        {
+            get
+            {
+                return guildChannelsList;
+            }
+            set
+            {
+                if (value != guildChannelsList)
+                {
+                    guildChannelsList = value;
+                    NotifyPropertyChanged("GuildChannelsList");
+                }
+            }
+        }
+
+        public ObservableCollection<SocketGuildChannel> TextChannelsList = new ObservableCollection<SocketGuildChannel>();
+        public ObservableCollection<SocketGuildChannel> VoiceChannelsList = new ObservableCollection<SocketGuildChannel>();
+
+        private IEnumerable<IMessage> messageList = null;
+
+        public IEnumerable<IMessage> MessageList
+        {
+            get
+            {
+                return messageList;
+            }
+            set
+            {
+                if (value != messageList)
+                {
+                    messageList = value;
+                    NotifyPropertyChanged("MessageList");
                 }
             }
         }

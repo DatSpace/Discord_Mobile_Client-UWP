@@ -41,7 +41,7 @@ namespace Discord_Mobile.ViewModels
                     {
                         await loginService.MakeConnectionAsync(loginCredential.Password);
                         Frame rootFrame = Window.Current.Content as Frame;
-                        rootFrame.Navigate(typeof(ChatPage));
+                        rootFrame.Navigate(typeof(ChatView));
                     }
                     catch
                     {
@@ -65,7 +65,7 @@ namespace Discord_Mobile.ViewModels
                     if (RememberMeIsChecked)
                         LoginService.SaveUser(TokenTextBox);
                     Frame rootFrame = Window.Current.Content as Frame;
-                    rootFrame.Navigate(typeof(ChatPage));
+                    rootFrame.Navigate(typeof(ChatView));
                 }
                 catch
                 {
