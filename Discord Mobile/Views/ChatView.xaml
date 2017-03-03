@@ -21,13 +21,15 @@
             <Setter Property="FontSize" Value="32"/>
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
         </Style>
-        <conv:ImageConverter x:Key="ic"/>
+        <conv:ImageConverter x:Key="ImageConverter"/>
+        <conv:TimeToStringConverter x:Key="TimeToStringConverter"/>
+        <conv:StringShortenerConverter x:Key="StringShortenerConverter"/>
 
         <DataTemplate x:Key="GuildsListDataTemplate" x:DataType="discweb:SocketGuild">
             <StackPanel Margin="0,5,0,0">
                 <Ellipse Width="40" Height="40">
                     <Ellipse.Fill>
-                        <ImageBrush ImageSource="{x:Bind IconUrl, Mode=OneWay,Converter={StaticResource ic}}"/>
+                        <ImageBrush ImageSource="{x:Bind IconUrl, Mode=OneWay,Converter={StaticResource ImageConverter}}"/>
                     </Ellipse.Fill>
                 </Ellipse>
                 <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay}" Foreground="White" FontSize="12" />
@@ -38,21 +40,24 @@
             <StackPanel Margin="0,5,0,0">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="# " FontSize="14" Foreground="Gray"/>
-                    <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay}" Foreground="White" FontSize="12" />
+                    <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay,Converter={StaticResource StringShortenerConverter}}" Foreground="White" FontSize="12" />
                 </StackPanel>
             </StackPanel>
         </DataTemplate>
 
         <DataTemplate x:Key="VoiceChannelListDataTemplate" x:DataType="discweb:SocketGuildChannel">
             <StackPanel Margin="0,5,0,0">
-                <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay}" Foreground="White" FontSize="12" />
+                <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay,Converter={StaticResource StringShortenerConverter}}" Foreground="White" FontSize="12" />
             </StackPanel>
         </DataTemplate>
 
         <DataTemplate x:Key="MessageListDataTemplate" x:DataType="disc:IMessage">
-            <Border Background="#2C2F33" BorderThickness="0,1,0,1" BorderBrush="Transparent">
-                <StackPanel Margin="0,5,0,0">
-                    <TextBlock TextAlignment="Left" Margin="5,2,0,0" Text="{x:Bind Author,Mode=OneWay}" Foreground="White" FontSize="14"/>
+            <Border Background="#2C2F33" CornerRadius="5">
+                <StackPanel Margin="5">
+                    <StackPanel Orientation="Horizontal" Margin="5,2,0,0">
+                        <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay}" Foreground="White" FontSize="14"/>
+                        <TextBlock TextAlignment="Left" Margin="5,3,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" FontSize="10"/>
+                    </StackPanel>
                     <TextBlock TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content, Mode=OneWay}" Foreground="#99AAB5" FontSize="20" />
                 </StackPanel>
             </Border>
@@ -67,7 +72,7 @@
         </Grid.RowDefinitions>
 
         <Border Background="#23272A"/>
-        <Button HorizontalAlignment="Left" Width="60" Click="OpenSplitView" Style="{StaticResource TopMenuButtons}" Content="&#xE25C;"/>
+        <Button HorizontalAlignment="Left" Width="80" Click="OpenSplitView" Style="{StaticResource TopMenuButtons}" Content="&#xE25C;"/>
         <StackPanel>
             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                 <StackPanel Margin="0,0,10,0">
@@ -82,23 +87,29 @@
             </StackPanel>
         </StackPanel>
 
-        <SplitView Grid.Row="1" PaneBackground="#2C2F33" IsPaneOpen="False" DisplayMode="CompactOverlay" CompactPaneLength="60" OpenPaneLength="200" Name="ChannelsSplitView">
+        <SplitView Grid.Row="1" PaneBackground="#2C2F33" IsPaneOpen="False" DisplayMode="CompactOverlay" CompactPaneLength="80" OpenPaneLength="220" Name="ChannelsSplitView">
             <SplitView.Pane>
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <ListView Loaded="{x:Bind ChatViewModel.SetGuilds}" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemClick="{x:Bind ChatViewModel.SetGuildChannels}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True"  ItemTemplate="{StaticResource GuildsListDataTemplate}"/>
+                    <ListView Loaded="{x:Bind ChatViewModel.SetGuilds}" ScrollViewer.VerticalScrollBarVisibility="Auto" ItemClick="{x:Bind ChatViewModel.SetGuildChannels}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource GuildsListDataTemplate}">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
                     <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock Foreground="White" FontWeight="Bold" FontSize="12" Margin="0,0,0,10" Text="TEXT CHANNELS"/>
+                            <TextBlock Foreground="White" FontWeight="Bold" FontSize="12" Margin="5,10,0,10" Text="TEXT CHANNELS"/>
                             <ListView ItemClick="{x:Bind ChatViewModel.SetChannelMessages}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.TextChannelsList, Mode=OneWay}" ItemTemplate="{StaticResource TextChannelListDataTemplate}"/>
-                            <TextBlock Foreground="White" FontWeight="Bold" FontSize="12" Margin="0,10,0,10" Text="VOICE CHANNELS"/>
+                            <TextBlock Foreground="White" FontWeight="Bold" FontSize="12" Margin="5,10,0,10" Text="VOICE CHANNELS"/>
                             <ListView ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource VoiceChannelListDataTemplate}"/>
                         </StackPanel>
                     </ScrollViewer>
-                    <Button VerticalAlignment="Bottom" Height="60" Width="60" Click="{x:Bind ChatViewModel.GoToSettings}" Style="{StaticResource TopMenuButtons}" Content="&#xE713;"/>
+                    <Button VerticalAlignment="Bottom" Height="60" Width="80" Click="{x:Bind ChatViewModel.GoToSettings}" Style="{StaticResource TopMenuButtons}" Content="&#xE713;"/>
                 </Grid>
             </SplitView.Pane>
             <SplitView.Content>
@@ -108,7 +119,14 @@
                         <RowDefinition Height="40"/>
                     </Grid.RowDefinitions>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ListView ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None" ItemTemplate="{StaticResource MessageListDataTemplate}"/>
+                        <ListView VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None" ItemTemplate="{StaticResource MessageListDataTemplate}">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Margin" Value="0,0,5,5"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                        </ListView>
                     </ScrollViewer>
                     <RelativePanel Grid.Row="1">
                         <TextBox RelativePanel.AlignLeftWithPanel="True" RelativePanel.LeftOf="SendButton" Background="#2C2F33" Foreground="#99AAB5" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignTopWithPanel="True"/>

@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "Discord.Net": "1.0.0-rc-00610",
+    "Discord.Net": "1.0.0-rc-00612",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2"
   },
   "frameworks": {

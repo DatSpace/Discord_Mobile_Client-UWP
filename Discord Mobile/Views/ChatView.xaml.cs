@@ -11,8 +11,6 @@ namespace Discord_Mobile
     /// </summary>
     public sealed partial class ChatView : Page
     {
-        ChatViewModel chatViewModel = new ChatViewModel();
-
         public ChatView()
         {
             this.InitializeComponent();
