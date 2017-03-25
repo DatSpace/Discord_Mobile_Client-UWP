@@ -73,9 +73,6 @@ namespace Discord_Mobile.ViewModels
                     ConnectionErrorTextBlock = "Error! Please re-check the token!";
                 }
             }
-
-
-
         }
 
 

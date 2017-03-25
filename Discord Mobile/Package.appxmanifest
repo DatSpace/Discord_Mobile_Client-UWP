@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="92e23cd5-920f-4ef1-934c-e7787ae53502" Publisher="CN=konka" Version="0.1.8.0" />
+  <Identity Name="92e23cd5-920f-4ef1-934c-e7787ae53502" Publisher="CN=konka" Version="0.3.0.0" />
   <mp:PhoneIdentity PhoneProductId="92e23cd5-920f-4ef1-934c-e7787ae53502" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Discord Mobile</DisplayName>
-    <PublisherDisplayName>TestName</PublisherDisplayName>
+    <DisplayName>Discord Mobile Client</DisplayName>
+    <PublisherDisplayName>KonKarapas</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
@@ -14,8 +14,8 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Discord_Mobile.App">
-      <uap:VisualElements DisplayName="Discord Mobile" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="A Windows 10 Mobile Application.The application will implement a chat, with future additions being voice channels and more." BackgroundColor="transparent">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Discord_Mobile_Client.App">
+      <uap:VisualElements DisplayName="Discord Mobile Client" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="A Discord client for Windows 10 Mobile." BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Discord Mobile">
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />

@@ -7,7 +7,7 @@ namespace Discord_Mobile.Services
 {
     class LoginService
     {
-        public static DiscordSocketClient client; //= new DiscordSocketClient();
+        public static DiscordSocketClient client;
 
         public static PasswordCredential CheckCredit()
         {
@@ -47,7 +47,7 @@ namespace Discord_Mobile.Services
         public async Task MakeConnectionAsync(string userToken)
         {
             client = new DiscordSocketClient();
-
+            
             // Configure the client to use a Bot token, and use our token
             await client.LoginAsync(TokenType.User, userToken);
             // Connect the client to Discord's gateway

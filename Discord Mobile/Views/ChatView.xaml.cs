@@ -1,6 +1,5 @@
 ﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Discord_Mobile.ViewModels;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -13,6 +12,7 @@ namespace Discord_Mobile
     {
         public ChatView()
         {
+            //this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
             this.InitializeComponent();
         }
         private void OpenSplitView(object sender, RoutedEventArgs e)
