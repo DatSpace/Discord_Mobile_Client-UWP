@@ -163,7 +163,6 @@ namespace Discord_Mobile.ViewModels
         {
             try
             {
-                throw new NullReferenceException();
                 UserAvatar = LoginService.client.CurrentUser.GetAvatarUrl();
                 UserName = LoginService.client.CurrentUser.Username;
                 UserStatus = LoginService.client.CurrentUser.Status;
