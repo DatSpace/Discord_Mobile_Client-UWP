@@ -64,6 +64,31 @@ namespace Discord_Mobile.Converters
         }
     }
 
+    class ChannelTopTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value.ToString() != "Discord Mobile Client")
+            {
+                if (value.ToString().Length >= 25)
+                {
+                    return string.Format("#" + value.ToString().Substring(0, 24) + "...");
+                }
+                else
+                {
+                    return string.Format("#" + value.ToString());
+                }
+            }
+            else
+                return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     //class MessageConverter : IValueConverter
     //{
     //    public object Convert(object value, Type targetType, object parameter, string language)

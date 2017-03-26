@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Discord;
-using Windows.UI.Xaml.Media;
-using Windows.UI;
 using System.Collections.Generic;
 using Discord.WebSocket;
 using System.Collections.ObjectModel;
@@ -15,6 +13,7 @@ using Windows.UI.Core;
 using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
+using Windows.UI.ViewManagement;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -27,10 +26,7 @@ namespace Discord_Mobile.ViewModels
         private SocketTextChannel TextChannel;
         private SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTyping = new Collection<UsersTyping>();
-
-        // This method is called by the Set accessor of each property.
-        // The CallerMemberName attribute that is applied to the optional propertyName
-        // parameter causes the property name of the caller to be substituted as an argument.
+        
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -72,10 +68,14 @@ namespace Discord_Mobile.ViewModels
             {
                 UpdateUserTypingStatus();
             }, TimeSpan.FromSeconds(2));
+
             SetUser();
+
             if (localSettings.Values["Enable_Sounds"] == null)
                 localSettings.Values["Enable_Sounds"] = true;
+
             GuildsList = LoginService.client.Guilds;
+
             LoginService.client.MessageReceived += Message_Received;
             LoginService.client.MessageDeleted += Message_Deleted;
             LoginService.client.CurrentUserUpdated += User_Updated;
@@ -86,6 +86,10 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
+
+            ScreenHorizontalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Width / 10);
+            ScreenVerticalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Height / 4);
+
         }
 
         private async Task User_Typing(SocketUser arg1, ISocketMessageChannel arg2)
@@ -122,7 +126,16 @@ namespace Discord_Mobile.ViewModels
                 if (Guild != null)
                 {
                     if (Guild.Users.Count < 500)
-                        GuildUserList = Guild.Users;
+                    {
+                        GuildUserList.Clear();
+                        foreach (SocketGuildUser user in Guild.Users)
+                        {
+                            if (user.Status != UserStatus.Offline)
+                            {
+                                GuildUserList.Add(user);
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -165,7 +178,6 @@ namespace Discord_Mobile.ViewModels
             {
                 UserAvatar = LoginService.client.CurrentUser.GetAvatarUrl();
                 UserName = LoginService.client.CurrentUser.Username;
-                UserStatus = LoginService.client.CurrentUser.Status;
             }
             catch
             {
@@ -184,7 +196,7 @@ namespace Discord_Mobile.ViewModels
                      {
                          if (UsersTyping[i].Username == arg.Author.Username)
                          {
-                                 UsersTyping.Remove(UsersTyping[i]);
+                             UsersTyping.Remove(UsersTyping[i]);
                          }
                      }
                      messageList.Add(arg);
@@ -193,7 +205,8 @@ namespace Discord_Mobile.ViewModels
                          SoundPath = null;
                          SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
                      }
-                     messageList.Remove(messageList[0]);
+                     if (messageList.Count > NumOfMessages)
+                         messageList.Remove(messageList[0]);
                  });
             }
         }
@@ -204,7 +217,14 @@ namespace Discord_Mobile.ViewModels
             NoGuildVisibility = Visibility.Collapsed;
             GuildChannelsList = Guild.Channels;
             SetChannels();
-            GuildUserList = Guild.Users;
+            GuildUserList.Clear();
+            foreach (SocketGuildUser user in Guild.Users)
+            {
+                if (user.Status != UserStatus.Offline)
+                {
+                    GuildUserList.Add(user);
+                }
+            }
         }
 
         private void SetChannels()
@@ -253,6 +273,8 @@ namespace Discord_Mobile.ViewModels
                 messageList[i] = messageList[messageList.Count - i - 1];
                 messageList[messageList.Count - i - 1] = temp;
             }
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            TopMessage = TextChannel.Name;
         }
 
         public async Task SelectVoiceChannel(object sender, ItemClickEventArgs e)
@@ -273,11 +295,281 @@ namespace Discord_Mobile.ViewModels
         {
             await TextChannel?.SendMessageAsync(Message);
             Message = "";
-            /*This question mark is used to indicate that 'channel' may sometimes be null
-             *and in cases that it is null, we will do nothing here. */
+        }
+
+        public void ChannelsSplitViewPaneControl(object sender, RoutedEventArgs e)
+        {
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+        }
+
+        public void UsersSplitViewPaneControl(object sender, RoutedEventArgs e)
+        {
+            UsersSplitViewPaneOpen = !UsersSplitViewPaneOpen;
+
+        }
+
+        public void AddGuildPopUp(object sender, RoutedEventArgs e)
+        {
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            AddGuildPopUpOpen = true;
+        }
+
+        public void JoinGuildPopUpOpen(object sender, RoutedEventArgs e)
+        {
+
+            AddGuildPopUpOpen = false;
+            JoinGuildPopUpOpenProperty = true;
+        }
+
+        public void JoinGuildPopUpCancel(object sender, RoutedEventArgs e)
+        {
+
+            JoinGuildPopUpOpenProperty = false;
+        }
+
+        public void JoinGuildPopUpJoin(object sender, RoutedEventArgs e)
+        {
+            //Not Supported yet!
+        }
+
+        public void CreateGuildPopUpOpen(object sender, RoutedEventArgs e)
+        {
+            AddGuildPopUpOpen = false;
+            CreateGuildPopUpOpenProperty = true;
+        }
+
+        public void CreateGuildPopUpCancel(object sender, RoutedEventArgs e)
+        {
+
+            CreateGuildPopUpOpenProperty = false;
+        }
+
+        public void CreateGuildPopUpCreate(object sender, RoutedEventArgs e)
+        {
+            if (NewGuildName != "" && NewGuildServer != "Select Server")
+            {
+                foreach (var region in LoginService.client.VoiceRegions)
+                {
+                    if (region.Name == NewGuildServer)
+                    {
+                        LoginService.client.CreateGuildAsync(NewGuildName, region);
+                        CreateGuildPopUpOpenProperty = false;
+                        NewGuildName = "";
+                        NewGuildServer = "Select Server";
+                    }
+                }
+            }
+        }
+
+        public void CreateChannelPopUpCreate(object sender, RoutedEventArgs e)
+        {
+            if (NewChannelName != "" && Guild != null)
+            {
+                Guild.CreateTextChannelAsync(NewChannelName);
+                CreateChannelPopUpOpenProperty = false;
+                NewChannelName = "";
+            }
+        }
+
+        public void CreateChannelPopUpOpen(object sender, RoutedEventArgs e)
+        {
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            CreateChannelPopUpOpenProperty = true;
+        }
+
+        public void CreateChannelPopUpCancel(object sender, RoutedEventArgs e)
+        {
+
+            CreateChannelPopUpOpenProperty = false;
+        }
+
+        public void CreateGuildServerSelect(object sender, RoutedEventArgs e)
+        {
+            var selection = ((MenuFlyoutItem)sender).Text;
+            NewGuildServer = selection;
         }
 
         //######################################################################
+
+        private string newGuildServer = "Select Server";
+
+        public string NewGuildServer
+        {
+            get
+            {
+                return newGuildServer;
+            }
+            set
+            {
+                if (value != newGuildServer)
+                {
+                    newGuildServer = value;
+                    NotifyPropertyChanged("NewGuildServer");
+                }
+            }
+        }
+
+        private string newGuildName = "";
+
+        public string NewGuildName
+        {
+            get
+            {
+                return newGuildName;
+            }
+            set
+            {
+                if (value != newGuildName)
+                {
+                    newGuildName = value;
+                    NotifyPropertyChanged("NewGuildName");
+                }
+            }
+        }
+
+        private string newChannelName = "";
+
+        public string NewChannelName
+        {
+            get
+            {
+                return newChannelName;
+            }
+            set
+            {
+                if (value != newChannelName)
+                {
+                    newChannelName = value;
+                    NotifyPropertyChanged("NewChannelName");
+                }
+            }
+        }
+
+        private string joinGuildName = "";
+
+        public string JoinGuildName
+        {
+            get
+            {
+                return joinGuildName;
+            }
+            set
+            {
+                if (value != joinGuildName)
+                {
+                    joinGuildName = value;
+                    NotifyPropertyChanged("JoinGuildName");
+                }
+            }
+        }
+
+        private int screenHorizontalCenter = 0;
+
+        public int ScreenHorizontalCenter
+        {
+            get
+            {
+                return screenHorizontalCenter;
+            }
+            set
+            {
+                if (value != screenHorizontalCenter)
+                {
+                    screenHorizontalCenter = value;
+                    NotifyPropertyChanged("ScreenHorizontalCenter");
+                }
+            }
+        }
+
+        private int screenVerticalCenter = 0;
+
+        public int ScreenVerticalCenter
+        {
+            get
+            {
+                return screenVerticalCenter;
+            }
+            set
+            {
+                if (value != screenVerticalCenter)
+                {
+                    screenVerticalCenter = value;
+                    NotifyPropertyChanged("ScreenVerticalCenter");
+                }
+            }
+        }
+
+        private bool createChannelPopUpOpenProperty = false;
+
+        public bool CreateChannelPopUpOpenProperty
+        {
+            get
+            {
+                return createChannelPopUpOpenProperty;
+            }
+            set
+            {
+                if (value != createChannelPopUpOpenProperty)
+                {
+                    createChannelPopUpOpenProperty = value;
+                    NotifyPropertyChanged("CreateChannelPopUpOpenProperty");
+                }
+            }
+        }
+
+        private bool createGuildPopUpOpenProperty = false;
+
+        public bool CreateGuildPopUpOpenProperty
+        {
+            get
+            {
+                return createGuildPopUpOpenProperty;
+            }
+            set
+            {
+                if (value != createGuildPopUpOpenProperty)
+                {
+                    createGuildPopUpOpenProperty = value;
+                    NotifyPropertyChanged("CreateGuildPopUpOpenProperty");
+                }
+            }
+        }
+
+        private bool joinGuildPopUpOpenProperty = false;
+
+        public bool JoinGuildPopUpOpenProperty
+        {
+            get
+            {
+                return joinGuildPopUpOpenProperty;
+            }
+            set
+            {
+                if (value != joinGuildPopUpOpenProperty)
+                {
+                    joinGuildPopUpOpenProperty = value;
+                    NotifyPropertyChanged("JoinGuildPopUpOpenProperty");
+                }
+            }
+        }
+
+        private bool addGuildPopUpOpen = false;
+
+        public bool AddGuildPopUpOpen
+        {
+            get
+            {
+                return addGuildPopUpOpen;
+            }
+            set
+            {
+                if (value != addGuildPopUpOpen)
+                {
+                    addGuildPopUpOpen = value;
+                    NotifyPropertyChanged("AddGuildPopUpOpen");
+                }
+            }
+        }
 
         private Uri soundPath = null;
 
@@ -353,34 +645,6 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private UserStatus userStatus = UserStatus.Offline;
-        public SolidColorBrush userStatusColor = new SolidColorBrush(Colors.White);
-
-        public UserStatus UserStatus
-        {
-            get
-            {
-                return userStatus;
-            }
-            set
-            {
-                if (value != userStatus)
-                {
-                    userStatus = value;
-                    if (userStatus == UserStatus.Online)
-                        userStatusColor = new SolidColorBrush(Colors.Green);
-                    else if (userStatus == UserStatus.Idle)
-                        userStatusColor = new SolidColorBrush(Colors.Orange);
-                    else if (userStatus == UserStatus.DoNotDisturb)
-                        userStatusColor = new SolidColorBrush(Colors.Red);
-                    else if (userStatus == UserStatus.Invisible)
-                        userStatusColor = new SolidColorBrush(Colors.DarkGray);
-                    NotifyPropertyChanged("UserStatus");
-                    NotifyPropertyChanged("userStatusColor");
-                }
-            }
-        }
-
         private IReadOnlyCollection<SocketGuild> guildsList = null;
 
         public IReadOnlyCollection<SocketGuild> GuildsList
@@ -417,23 +681,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private IReadOnlyCollection<SocketGuildUser> guildUserList = null;
-
-        public IReadOnlyCollection<SocketGuildUser> GuildUserList
-        {
-            get
-            {
-                return guildUserList;
-            }
-            set
-            {
-                if (value != guildUserList)
-                {
-                    guildUserList = value;
-                    NotifyPropertyChanged("GuildUserList");
-                }
-            }
-        }
+        public ObservableCollection<SocketGuildUser> GuildUserList = new ObservableCollection<SocketGuildUser>();
 
         public ObservableCollection<SocketGuildChannel> TextChannelsList = new ObservableCollection<SocketGuildChannel>();
         public ObservableCollection<SocketGuildChannel> VoiceChannelsList = new ObservableCollection<SocketGuildChannel>();
@@ -538,6 +786,63 @@ namespace Discord_Mobile.ViewModels
             get
             {
                 return messageList;
+            }
+        }
+
+        private bool channelsSplitViewPaneOpen = false;
+
+        public bool ChannelsSplitViewPaneOpen
+        {
+            get
+            {
+                return channelsSplitViewPaneOpen;
+            }
+            set
+            {
+                if (value != channelsSplitViewPaneOpen)
+                {
+                    channelsSplitViewPaneOpen = value;
+                    NotifyPropertyChanged("ChannelsSplitViewPaneOpen");
+
+                }
+            }
+        }
+
+        private bool usersSplitViewPaneOpen = false;
+
+        public bool UsersSplitViewPaneOpen
+        {
+            get
+            {
+                return usersSplitViewPaneOpen;
+            }
+            set
+            {
+                if (value != usersSplitViewPaneOpen)
+                {
+                    usersSplitViewPaneOpen = value;
+                    NotifyPropertyChanged("UsersSplitViewPaneOpen");
+
+                }
+            }
+        }
+
+        private string topMessage = "Discord Mobile Client";
+
+        public string TopMessage
+        {
+            get
+            {
+                return topMessage;
+            }
+            set
+            {
+                if (value != topMessage)
+                {
+                    topMessage = value;
+                    NotifyPropertyChanged("TopMessage");
+
+                }
             }
         }
     }
