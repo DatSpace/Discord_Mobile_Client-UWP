@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord.WebSocket;
+using System;
 using Windows.UI.Xaml.Data;
 
 namespace Discord_Mobile.Converters
@@ -23,14 +24,21 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    class UserNameConverter : IValueConverter
+    class UserNameToNicknameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value != null)
             {
-                int temp = value.ToString().LastIndexOf('#');
-                return value.ToString().Substring(0, temp);
+                string usernickname = ((SocketGuildUser)value).Nickname;
+                if (usernickname != null && usernickname != "")
+                    return usernickname;
+                else
+                {
+                    int temp = value.ToString().LastIndexOf('#');
+                    return value.ToString().Substring(0, temp);
+                }
+
             }
             return value;
         }

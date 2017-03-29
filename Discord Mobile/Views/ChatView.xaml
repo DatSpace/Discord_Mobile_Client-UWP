@@ -15,11 +15,13 @@
         <conv:AvatarIdToUrlConverter x:Key="AvatarIdToUrlConverter"/>
         <conv:TimeToStringConverter x:Key="TimeToStringConverter"/>
         <conv:ChannelNameConverter x:Key="ChannelNameConverter"/>
-        <conv:UserNameConverter x:Key="UserNameConverter"/>
+        <conv:UserNameToNicknameConverter x:Key="UserNameToNicknameConverter"/>
         <conv:UserTypingConverter x:Key="UserTypingConverter"/>
         <conv:ChannelTopTextConverter x:Key="ChannelTopTextConverter"/>
         <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
         <conv:PlaceholderConverter x:Key="PlaceholderConverter"/>
+        <conv:UserToColorConverter x:Key="UserToColorConverter"/>
+        <conv:AuthorToAvatarConverter x:Key="AuthorToAvatarConverter"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
 
@@ -54,18 +56,27 @@
                     </Ellipse.Fill>
                 </Ellipse>
                 <Ellipse Stroke="Black" StrokeThickness="1" RelativePanel.AlignRightWith="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Fill="{x:Bind Status,Converter={StaticResource StatusToColorConverter}}" Width="8" Height="8" Margin="0,20,0,0"/>
-                <TextBlock RelativePanel.RightOf="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Margin="5,0,0,0" Text="{x:Bind Username,Mode=OneWay, Converter={StaticResource ChannelNameConverter}}" FontSize="12" Foreground="White"/>
+                <TextBlock RelativePanel.RightOf="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Margin="5,0,0,0" Text="{x:Bind Username,Mode=OneWay, Converter={StaticResource ChannelNameConverter}}" FontSize="12" Foreground="{x:Bind Roles,Mode=OneWay,Converter={StaticResource UserToColorConverter}}"/>
             </RelativePanel>
         </DataTemplate>
 
         <DataTemplate x:Key="MessageListDataTemplate" x:DataType="disc:IMessage">
-            <StackPanel Margin="5,0,5,0">
+            <StackPanel Margin="0,5,0,5">
                 <Border BorderBrush="#99AAB5" Opacity="0.1" BorderThickness="0,1,0,0"/>
-                <StackPanel Orientation="Horizontal" Margin="5,2,0,0">
-                    <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserNameConverter}}" Foreground="White" FontSize="14"/>
-                    <TextBlock TextAlignment="Left" Margin="5,3,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" FontSize="10"/>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="40" Height="40">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="{x:Bind Author, Mode=OneWay,Converter={StaticResource AuthorToAvatarConverter}}"/>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                            <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserNameToNicknameConverter}}" Foreground="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserToColorConverter}}" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="10"/>
+                        </StackPanel>
+                        <TextBlock TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
+                    </StackPanel>
                 </StackPanel>
-                <TextBlock TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
             </StackPanel>
         </DataTemplate>
     </Page.Resources>
@@ -221,7 +232,7 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateGuildPopUpOpenProperty,Mode=OneWay}">
-            <Grid MinWidth="300">
+            <Grid MinWidth="250">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Create Your Server" FontSize="18" FontWeight="Bold" Foreground="#7289DA"/>
@@ -278,7 +289,7 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.JoinGuildPopUpOpenProperty,Mode=OneWay}">
-            <Grid  MinWidth="300">
+            <Grid  MinWidth="250">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Join a Server" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
@@ -303,7 +314,7 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateChannelPopUpOpenProperty,Mode=OneWay}">
-            <Grid  MinWidth="300">
+            <Grid  MinWidth="250">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Create Text Channel" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
@@ -327,10 +338,10 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
-            <Grid  MinWidth="300">
+            <Grid  MinWidth="250">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
-                    
+
                     <TextBlock HorizontalAlignment="Center" Text="Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
                     <Button Margin="0,20,0,0" Click="{x:Bind SettingsViewModel.Disconnect}" HorizontalAlignment="Center" Foreground="White" Content="Disconnect Me!" />
                     <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="WrapWholeWords" Foreground="Red">
@@ -364,7 +375,7 @@
                             <TextBlock Margin="10,0,0,0" FontSize="12" Text="{x:Bind SettingsViewModel.Version}" Foreground="White"/>
                         </StackPanel>
                     </StackPanel>
- 
+
                 </StackPanel>
             </Grid>
         </Popup>
