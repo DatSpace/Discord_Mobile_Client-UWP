@@ -10,10 +10,6 @@
     xmlns:disc="using:Discord"
     mc:Ignorable="d">
 
-    <Page.DataContext>
-        <vm:ChatViewModel x:Name="ChatViewModel"/>
-    </Page.DataContext>
-
     <Page.Resources>
         <conv:IconIdToUrlConverter x:Key="IconIdToUrlConverter"/>
         <conv:AvatarIdToUrlConverter x:Key="AvatarIdToUrlConverter"/>
@@ -23,6 +19,9 @@
         <conv:UserTypingConverter x:Key="UserTypingConverter"/>
         <conv:ChannelTopTextConverter x:Key="ChannelTopTextConverter"/>
         <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
+        <conv:PlaceholderConverter x:Key="PlaceholderConverter"/>
+        <vm:ChatViewModel x:Name="ChatViewModel"/>
+        <vm:SettingsViewModel x:Name="SettingsViewModel"/>
 
         <DataTemplate x:Key="GuildsListDataTemplate" x:DataType="discweb:SocketGuild">
             <Ellipse Margin="0,10,0,0" Width="40" Height="40">
@@ -146,7 +145,7 @@
                         </Ellipse>
                         <Ellipse Stroke="Black" StrokeThickness="1" RelativePanel.AlignRightWith="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Fill="SpringGreen" Width="10" Height="10" Margin="0,20,0,0"/>
                         <TextBlock RelativePanel.RightOf="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Margin="10,0,0,0" Text="{x:Bind ChatViewModel.UserName, Mode=OneWay}" FontSize="14" FontWeight="Bold" Foreground="White"/>
-                        <Button BorderThickness="0" Background="Transparent" Foreground="White" Click="{x:Bind ChatViewModel.GoToSettings}" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="16" Content="&#xE713;"/>
+                        <Button BorderThickness="0" Background="Transparent" Foreground="White" Click="{x:Bind ChatViewModel.SettingsPopUpOpen}" RelativePanel.AlignRightWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="16" Content="&#xE713;"/>
                     </RelativePanel>
 
                 </Grid>
@@ -183,7 +182,7 @@
                     </StackPanel>
 
                     <Border Grid.Row="1" Background="#99AAB5"/>
-                    <TextBox Grid.Row="1" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="Message channel: #Something" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
+                    <TextBox Grid.Row="1" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource PlaceholderConverter}}" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
                     <Button Grid.Row="1" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Foreground="White" FontSize="24" Click="{x:Bind ChatViewModel.SendMessageToTextChannel}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
 
                     <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="160">
@@ -327,29 +326,48 @@
             </Grid>
         </Popup>
 
-        <!--<Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
+        <Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
             <Grid  MinWidth="300">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
+                    
                     <TextBlock HorizontalAlignment="Center" Text="Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <TextBox Margin="0,20,0,5" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>
-                    <TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter your channel's prefered name!"/>
+                    <Button Margin="0,20,0,0" Click="{x:Bind SettingsViewModel.Disconnect}" HorizontalAlignment="Center" Foreground="White" Content="Disconnect Me!" />
+                    <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="WrapWholeWords" Foreground="Red">
+                        Warning!!!
+                        <LineBreak/>
+                        The saved token will be deleted!
+                    </TextBlock>
+                    <Grid Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                        <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateChannelPopUpCreate}">
-                            <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Create"/>
-                            </Border>
-                        </Button>
-                        <Button Click="{x:Bind ChatViewModel.CreateChannelPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="IndianRed" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
-                            </Border>
-                        </Button>
+                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="Sound Notifications:" Foreground="White" HorizontalAlignment="Left"/>
+                        <ToggleSwitch Margin="10,0,0,0" Grid.Column="1" Foreground="White" IsOn="{x:Bind SettingsViewModel.Enable_Sounds,Mode=TwoWay}"/>
+
+                        <TextBlock Visibility="Collapsed" Grid.Row="1" Margin="10,10,0,0" Text="Change Username:" VerticalAlignment="Center" Foreground="White" HorizontalAlignment="Left"/>
+                        <StackPanel Visibility="Collapsed" Margin="0,10,0,0" Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
+                            <TextBox IsEnabled="False" HorizontalAlignment="Center" MinWidth="120" VerticalAlignment="Center" PlaceholderText="USERNAME" Foreground="White"/>
+                            <Button Content="&#xE70F;" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="White" FontFamily="Segoe MDL2 Assets"/>
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Margin="5,10,0,0">
+                        <Button Content="Rate Me" Foreground="LightGray" FontSize="18"/>
+                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                            <TextBlock Text="Version Number:" FontSize="12" Foreground="White"/>
+                            <TextBlock Margin="10,0,0,0" FontSize="12" Text="{x:Bind SettingsViewModel.Version}" Foreground="White"/>
+                        </StackPanel>
                     </StackPanel>
+ 
                 </StackPanel>
             </Grid>
-        </Popup>-->
+        </Popup>
 
         <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}" AutoPlay="True"/>
 

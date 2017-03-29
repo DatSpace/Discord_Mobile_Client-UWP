@@ -299,10 +299,10 @@ namespace Discord_Mobile.ViewModels
 
         }
 
-        public void GoToSettings()
+        public void SettingsPopUpOpen()
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(SettingsView));
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            SettingsPopUpOpenProperty = true;
         }
 
         public async Task SendMessageToTextChannel()
@@ -405,23 +405,23 @@ namespace Discord_Mobile.ViewModels
 
         //######################################################################
 
-        //private bool settingsPopUpOpenProperty = false;
+        private bool settingsPopUpOpenProperty = false;
 
-        //public bool SettingsPopUpOpenProperty
-        //{
-        //    get
-        //    {
-        //        return settingsPopUpOpenProperty;
-        //    }
-        //    set
-        //    {
-        //        if (value != settingsPopUpOpenProperty)
-        //        {
-        //            settingsPopUpOpenProperty = value;
-        //            NotifyPropertyChanged("SettingsPopUpOpenProperty");
-        //        }
-        //    }
-        //}
+        public bool SettingsPopUpOpenProperty
+        {
+            get
+            {
+                return settingsPopUpOpenProperty;
+            }
+            set
+            {
+                if (value != settingsPopUpOpenProperty)
+                {
+                    settingsPopUpOpenProperty = value;
+                    NotifyPropertyChanged("SettingsPopUpOpenProperty");
+                }
+            }
+        }
 
         private string guildSelectedText = "Select Guild";
 

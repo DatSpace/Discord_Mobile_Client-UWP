@@ -96,6 +96,26 @@ namespace Discord_Mobile.Converters
         }
     }
 
+    class PlaceholderConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null)
+            {
+                return string.Format("Message #" + value.ToString());
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     //class MessageConverter : IValueConverter
     //{
     //    public object Convert(object value, Type targetType, object parameter, string language)
