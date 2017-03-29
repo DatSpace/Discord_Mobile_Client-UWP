@@ -19,6 +19,7 @@ namespace Discord_Mobile.ViewModels
 {
     class ChatViewModel : INotifyPropertyChanged
     {
+
         private int NumOfMessages = 30;
         public event PropertyChangedEventHandler PropertyChanged;
         private Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
@@ -26,7 +27,7 @@ namespace Discord_Mobile.ViewModels
         private SocketTextChannel TextChannel;
         private SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTyping = new Collection<UsersTyping>();
-        
+
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -34,47 +35,59 @@ namespace Discord_Mobile.ViewModels
 
         private async void UpdateUserTypingStatus()
         {
-            for (int i = 0; i < UsersTyping.Count; i++)
+            if (UsersTyping != null)
             {
-                if (UsersTyping[i].ToBeDeleted())
+                for (int i = 0; i < UsersTyping.Count; i++)
                 {
-                    UsersTyping.Remove(UsersTyping[i]);
-                }
-            }
-
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                Users_Typing = "";
-                foreach (var user in UsersTyping)
-                {
-                    if (Users_Typing == "")
+                    if (UsersTyping[i].ToBeDeleted())
                     {
-                        Users_Typing += user.Username;
+                        UsersTyping.Remove(UsersTyping[i]);
                     }
-                    else
-                        Users_Typing += ", " + user.Username;
                 }
 
-                if (Users_Typing == "")
-                    Users_Typing_Visibility = false;
-                else
-                    Users_Typing_Visibility = true;
-            });
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Users_Typing = "";
+                    foreach (var user in UsersTyping)
+                    {
+                        if (Users_Typing == "")
+                        {
+                            Users_Typing += user.Username;
+                        }
+                        else
+                            Users_Typing += ", " + user.Username;
+                    }
+
+                    if (Users_Typing == "")
+                        Users_Typing_Visibility = false;
+                    else
+                        Users_Typing_Visibility = true;
+                });
+            }
         }
 
-        public void Initialization()
+        public void IsReady()
+        {
+            LoginService.client.Ready += Initialization;
+        }
+
+        private async Task Initialization()
         {
             ThreadPoolTimer timer = ThreadPoolTimer.CreatePeriodicTimer((t) =>
             {
                 UpdateUserTypingStatus();
             }, TimeSpan.FromSeconds(2));
 
-            SetUser();
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                SetUser();
+                GuildsList = LoginService.client.Guilds;
+                ScreenHorizontalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Width / 10);
+                ScreenVerticalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Height / 4);
+            });
 
             if (localSettings.Values["Enable_Sounds"] == null)
                 localSettings.Values["Enable_Sounds"] = true;
-
-            GuildsList = LoginService.client.Guilds;
 
             LoginService.client.MessageReceived += Message_Received;
             LoginService.client.MessageDeleted += Message_Deleted;
@@ -86,46 +99,45 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
-
-            ScreenHorizontalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Width / 10);
-            ScreenVerticalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Height / 4);
-
         }
 
         private async Task User_Typing(SocketUser arg1, ISocketMessageChannel arg2)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            if (TextChannel != null && TextChannel == arg2)
             {
-                if (TextChannel != null)
-                    if (TextChannel == arg2)
+
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+
+                    if (!Users_Typing.Contains(arg1.Username))
                     {
-                        if (!Users_Typing.Contains(arg1.Username))
+                        UsersTyping.Add(new UsersTyping { Username = arg1.Username, TimeChecked = DateTime.Now });
+                    }
+                    else
+                    {
+                        foreach (var user in UsersTyping)
                         {
-                            UsersTyping.Add(new UsersTyping { Username = arg1.Username, TimeChecked = DateTime.Now });
-                        }
-                        else
-                        {
-                            foreach (var user in UsersTyping)
+                            if (user.Username == arg1.Username)
                             {
-                                if (user.Username == arg1.Username)
-                                {
-                                    user.TimeChecked = DateTime.Now;
-                                    break;
-                                }
+                                user.TimeChecked = DateTime.Now;
+                                break;
                             }
                         }
-                        UpdateUserTypingStatus();
                     }
-            });
+                    UpdateUserTypingStatus();
+
+
+                });
+            }
         }
 
         private async Task User_Joined(SocketGuildUser arg)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            if (Guild != null)
             {
-                if (Guild != null)
+                if (Guild.Users.Count < 500)
                 {
-                    if (Guild.Users.Count < 500)
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         GuildUserList.Clear();
                         foreach (SocketGuildUser user in Guild.Users)
@@ -135,10 +147,11 @@ namespace Discord_Mobile.ViewModels
                                 GuildUserList.Add(user);
                             }
                         }
-                    }
+                    });
                 }
-            });
+            }
         }
+
 
         private async Task Channel_Created(SocketChannel arg)
         {
@@ -191,23 +204,23 @@ namespace Discord_Mobile.ViewModels
             if (arg.Channel == TextChannel)
             {
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     for (int i = 0; i < UsersTyping.Count; i++)
-                     {
-                         if (UsersTyping[i].Username == arg.Author.Username)
-                         {
-                             UsersTyping.Remove(UsersTyping[i]);
-                         }
-                     }
-                     messageList.Add(arg);
-                     if ((bool)localSettings.Values["Enable_Sounds"])
-                     {
-                         SoundPath = null;
-                         SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
-                     }
-                     if (messageList.Count > NumOfMessages)
-                         messageList.Remove(messageList[0]);
-                 });
+                {
+                    for (int i = 0; i < UsersTyping.Count; i++)
+                    {
+                        if (UsersTyping[i].Username == arg.Author.Username)
+                        {
+                            UsersTyping.Remove(UsersTyping[i]);
+                        }
+                    }
+                    messageList.Add(arg);
+                    if ((bool)localSettings.Values["Enable_Sounds"])
+                    {
+                        SoundPath = null;
+                        SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
+                    }
+                    if (messageList.Count > NumOfMessages)
+                        messageList.Remove(messageList[0]);
+                });
             }
         }
 
@@ -215,6 +228,7 @@ namespace Discord_Mobile.ViewModels
         {
             Guild = (SocketGuild)e.ClickedItem;
             NoGuildVisibility = Visibility.Collapsed;
+            GuildSelectedText = Guild.Name;
             GuildChannelsList = Guild.Channels;
             SetChannels();
             GuildUserList.Clear();
@@ -391,6 +405,42 @@ namespace Discord_Mobile.ViewModels
 
         //######################################################################
 
+        //private bool settingsPopUpOpenProperty = false;
+
+        //public bool SettingsPopUpOpenProperty
+        //{
+        //    get
+        //    {
+        //        return settingsPopUpOpenProperty;
+        //    }
+        //    set
+        //    {
+        //        if (value != settingsPopUpOpenProperty)
+        //        {
+        //            settingsPopUpOpenProperty = value;
+        //            NotifyPropertyChanged("SettingsPopUpOpenProperty");
+        //        }
+        //    }
+        //}
+
+        private string guildSelectedText = "Select Guild";
+
+        public string GuildSelectedText
+        {
+            get
+            {
+                return guildSelectedText;
+            }
+            set
+            {
+                if (value != guildSelectedText)
+                {
+                    guildSelectedText = value;
+                    NotifyPropertyChanged("GuildSelectedText");
+                }
+            }
+        }
+
         private string newGuildServer = "Select Server";
 
         public string NewGuildServer
@@ -445,25 +495,25 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private string joinGuildName = "";
+        //private string joinGuildInvite = "";
 
-        public string JoinGuildName
-        {
-            get
-            {
-                return joinGuildName;
-            }
-            set
-            {
-                if (value != joinGuildName)
-                {
-                    joinGuildName = value;
-                    NotifyPropertyChanged("JoinGuildName");
-                }
-            }
-        }
+        //public string JoinGuildInvite
+        //{
+        //    get
+        //    {
+        //        return joinGuildInvite;
+        //    }
+        //    set
+        //    {
+        //        if (value != joinGuildInvite)
+        //        {
+        //            joinGuildInvite = value;
+        //            NotifyPropertyChanged("JoinGuildInvite");
+        //        }
+        //    }
+        //}
 
-        private int screenHorizontalCenter = 0;
+        private int screenHorizontalCenter = 1;
 
         public int ScreenHorizontalCenter
         {
@@ -481,7 +531,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private int screenVerticalCenter = 0;
+        private int screenVerticalCenter = 1;
 
         public int ScreenVerticalCenter
         {

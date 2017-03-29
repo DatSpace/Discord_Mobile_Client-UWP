@@ -103,7 +103,6 @@
     </Compile>
     <Compile Include="Converters\ImageIdToUrlConverter.cs" />
     <Compile Include="Converters\PropertyConverter.cs" />
-    <Compile Include="Converters\ScreenConverter.cs" />
     <Compile Include="Converters\StringConverter.cs" />
     <Compile Include="Converters\TimeToStringConverter.cs" />
     <Compile Include="Models\UsersTyping.cs" />

@@ -7,7 +7,7 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value.ToString().Length >= 18)
+            if (value != null && value.ToString().Length >= 18)
             {
                 return string.Format(value.ToString().Substring(0, 17) + "...");
             }
@@ -27,8 +27,12 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            int temp = value.ToString().LastIndexOf('#');
-            return value.ToString().Substring(0, temp);
+            if (value != null)
+            {
+                int temp = value.ToString().LastIndexOf('#');
+                return value.ToString().Substring(0, temp);
+            }
+            return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -41,20 +45,23 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value.ToString().Length > 20)
+            if (value != null)
             {
-                while (value.ToString().Length > 20)
+                if (value.ToString().Length > 20)
                 {
-                    int tempindex;
-                    tempindex = value.ToString().LastIndexOf(",");
-                    value.ToString().Substring(0, tempindex);
+                    while (value.ToString().Length > 20)
+                    {
+                        int tempindex;
+                        tempindex = value.ToString().LastIndexOf(",");
+                        value.ToString().Substring(0, tempindex);
+                    }
+                    value += " and more are typing...";
                 }
-                value += " and more are typing...";
+                else if (!value.ToString().Contains(","))
+                    value += " is typing...";
+                else
+                    value += " are typing...";
             }
-            else if (!value.ToString().Contains(","))
-                value += " is typing...";
-            else
-                value += " are typing...";
             return value;
         }
 
@@ -68,7 +75,7 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value.ToString() != "Discord Mobile Client")
+            if (value != null && value.ToString() != "Discord Mobile Client")
             {
                 if (value.ToString().Length >= 25)
                 {

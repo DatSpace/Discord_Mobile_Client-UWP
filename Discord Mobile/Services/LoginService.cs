@@ -37,7 +37,10 @@ namespace Discord_Mobile.Services
                     }*/
                 }
             }
-            catch { }
+            catch
+            {
+                throw new System.Exception("CheckCredit()");
+            }
 
             //Return the credential.
             return loginCredential;
@@ -52,8 +55,6 @@ namespace Discord_Mobile.Services
             await client.LoginAsync(TokenType.User, userToken);
             // Connect the client to Discord's gateway
             await client.StartAsync();
-
-            await Task.Delay(2000);
         }
 
         public static void SaveUser(string userToken)

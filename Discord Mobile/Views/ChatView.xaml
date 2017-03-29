@@ -25,14 +25,11 @@
         <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
 
         <DataTemplate x:Key="GuildsListDataTemplate" x:DataType="discweb:SocketGuild">
-            <StackPanel Margin="0,5,0,0">
-                <Ellipse Width="40" Height="40">
-                    <Ellipse.Fill>
-                        <ImageBrush ImageSource="{x:Bind IconId, Mode=OneWay,Converter={StaticResource IconIdToUrlConverter},ConverterParameter={Binding Id,Mode=OneWay}}"/>
-                    </Ellipse.Fill>
-                </Ellipse>
-                <TextBlock TextAlignment="Center" TextWrapping="WrapWholeWords" Margin="0,2,0,0" Text="{x:Bind Name, Mode=OneWay}" Foreground="White" FontSize="12" />
-            </StackPanel>
+            <Ellipse Margin="0,10,0,0" Width="40" Height="40">
+                <Ellipse.Fill>
+                    <ImageBrush ImageSource="{x:Bind IconId, Mode=OneWay,Converter={StaticResource IconIdToUrlConverter},ConverterParameter={Binding Id,Mode=OneWay}}"/>
+                </Ellipse.Fill>
+            </Ellipse>
         </DataTemplate>
 
         <DataTemplate x:Key="TextChannelListDataTemplate" x:DataType="discweb:SocketGuildChannel">
@@ -82,7 +79,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Loaded="{x:Bind ChatViewModel.Initialization}" Background="#1e2124"/>
+        <Border Loaded="{x:Bind ChatViewModel.IsReady}" Background="#1e2124"/>
         <Button Background="Transparent" HorizontalAlignment="Left" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.ChannelsSplitViewPaneControl}" Content="&#xEA37;"/>
         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource ChannelTopTextConverter}}" Foreground="#99AAB5" FontSize="14" FontWeight="Bold"/>
         <Button Background="Transparent" HorizontalAlignment="Right" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.UsersSplitViewPaneControl}" Content="&#xE716;"/>
@@ -98,19 +95,12 @@
                     <Grid>
 
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="1" Background="#2e3136"/>
                         <StackPanel>
-                            <ListView ScrollViewer.VerticalScrollBarVisibility="Auto" ItemClick="{x:Bind ChatViewModel.SelectGuild}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource GuildsListDataTemplate}">
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                            </ListView>
+                            <ListView ScrollViewer.VerticalScrollBarVisibility="Auto" ItemClick="{x:Bind ChatViewModel.SelectGuild}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource GuildsListDataTemplate}"/>
                             <Button Click="{x:Bind ChatViewModel.AddGuildPopUp}" BorderThickness="0" Margin="0,10,0,0" Background="Transparent" HorizontalAlignment="Stretch">
                                 <RelativePanel>
                                     <Ellipse Name="AddChannelCircle" Width="40" Height="40" Fill="Transparent" StrokeDashArray="2.5" Stroke="#99AAB5" StrokeThickness="1"/>
@@ -119,22 +109,33 @@
                                 </RelativePanel>
                             </Button>
                         </StackPanel>
-                        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <StackPanel Margin="5,10,0,0" Orientation="Horizontal">
-                                    <TextBlock Foreground="#99AAB5" FontWeight="Bold" FontSize="12" Text="TEXT CHANNELS"/>
-                                    <Button Margin="5,0,0,0" Click="{x:Bind ChatViewModel.CreateChannelPopUpOpen}" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
+                        <Grid Grid.Column="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Background="#1e2124" BorderBrush="Gray" BorderThickness="0,0,0,1"/>
+                            <TextBlock Margin="5" TextAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind ChatViewModel.GuildSelectedText, Mode=OneWay}" Foreground="White" FontWeight="Bold" FontSize="14" />
+
+                            <Border Grid.Row="1" Background="#2e3136"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <StackPanel Margin="5,10,0,0" Orientation="Horizontal">
+                                        <TextBlock Foreground="#99AAB5" FontWeight="Bold" FontSize="12" Text="TEXT CHANNELS"/>
+                                        <Button Margin="5,0,0,0" Click="{x:Bind ChatViewModel.CreateChannelPopUpOpen}" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
+                                    </StackPanel>
+                                    <TextBlock Margin="10,5,0,10" FontSize="10" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
+                                    <ListView ItemClick="{x:Bind ChatViewModel.SelectTextChannel}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.TextChannelsList, Mode=OneWay}" ItemTemplate="{StaticResource TextChannelListDataTemplate}"/>
+                                    <StackPanel Margin="5,10,0,0" Orientation="Horizontal">
+                                        <TextBlock Foreground="#99AAB5" FontWeight="Bold" FontSize="12" Text="VOICE CHANNELS"/>
+                                        <Button Margin="5,0,0,0" IsEnabled="False" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
+                                    </StackPanel>
+                                    <TextBlock Margin="10,5,0,10" FontSize="10" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
+                                    <ListView ItemClick="{x:Bind ChatViewModel.SelectVoiceChannel}" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource VoiceChannelListDataTemplate}"/>
                                 </StackPanel>
-                                <TextBlock Margin="10,5,0,10" FontSize="10" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
-                                <ListView ItemClick="{x:Bind ChatViewModel.SelectTextChannel}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.TextChannelsList, Mode=OneWay}" ItemTemplate="{StaticResource TextChannelListDataTemplate}"/>
-                                <StackPanel Margin="5,10,0,0" Orientation="Horizontal">
-                                    <TextBlock Foreground="#99AAB5" FontWeight="Bold" FontSize="12" Text="VOICE CHANNELS"/>
-                                    <Button Margin="5,0,0,0" IsEnabled="False" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
-                                </StackPanel>
-                                <TextBlock Margin="10,5,0,10" FontSize="10" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
-                                <ListView ItemClick="{x:Bind ChatViewModel.SelectVoiceChannel}" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}" IsItemClickEnabled="True" ItemTemplate="{StaticResource VoiceChannelListDataTemplate}"/>
-                            </StackPanel>
-                        </ScrollViewer>
+                            </ScrollViewer>
+                        </Grid>
                     </Grid>
 
                     <RelativePanel Grid.Row="1" HorizontalAlignment="Stretch">
@@ -154,7 +155,7 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="55"/>
+                        <RowDefinition Height="40"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel VerticalAlignment="Center" Visibility="{x:Bind ChatViewModel.NoChannelVisibility, Mode=OneWay}">
@@ -162,11 +163,12 @@
                         <TextBlock FontWeight="Bold" FontSize="20" TextAlignment="Center" Foreground="#99AAB5" Text="{x:Bind ChatViewModel.NoChannelMessage,Mode=OneWay}"/>
                     </StackPanel>
 
-                    <ListView ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.IsHorizontalRailEnabled="False" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None" ItemTemplate="{StaticResource MessageListDataTemplate}">
+
+                    <ListView Margin="0,0,0,20" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.IsHorizontalRailEnabled="False" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None" ItemTemplate="{StaticResource MessageListDataTemplate}">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Margin" Value="0,0,5,5"/>
+                                <Setter Property="Margin" Value="0,0,0,10"/>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.ItemsPanel>
@@ -175,14 +177,14 @@
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                     </ListView>
+                    <StackPanel Visibility="{x:Bind ChatViewModel.Users_Typing_Visibility,Mode=OneWay}" Margin="0,0,0,5" VerticalAlignment="Bottom" Orientation="Horizontal">
+                        <Image Height="10" Width="10" Source="/Assets/typing.gif" Margin="10,0,0,0"/>
+                        <TextBlock Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Converter={StaticResource UserTypingConverter},Mode=OneWay}" Foreground="#99AAB5"/>
+                    </StackPanel>
 
                     <Border Grid.Row="1" Background="#99AAB5"/>
-                    <RelativePanel Grid.Row="1">
-                        <Image Height="10" Width="10" Name="TypingImage" RelativePanel.Above="MessageTextBox" Source="/Assets/typing.gif" Margin="10,0,0,0" Visibility="{x:Bind ChatViewModel.Users_Typing_Visibility,Mode=OneWay}"/>
-                        <TextBlock RelativePanel.RightOf="TypingImage" RelativePanel.Above="MessageTextBox" RelativePanel.AlignRightWithPanel="True" Name="TypingText" Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Converter={StaticResource UserTypingConverter},Mode=OneWay}" Visibility="{x:Bind ChatViewModel.Users_Typing_Visibility,Mode=OneWay}" Foreground="#99AAB5"/>
-                        <TextBox BorderThickness="0" PlaceholderText="Message channel: #Something"  RelativePanel.AlignBottomWithPanel="True" RelativePanel.LeftOf="MessageSendButton" RelativePanel.AlignLeftWithPanel="True" Name="MessageTextBox" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
-                        <Button Background="Transparent" BorderThickness="0" Foreground="White" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True" Height="30" Width="40" Name="MessageSendButton" Click="{x:Bind ChatViewModel.SendMessageToTextChannel}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
-                    </RelativePanel>
+                    <TextBox Grid.Row="1" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="Message channel: #Something" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
+                    <Button Grid.Row="1" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Foreground="White" FontSize="24" Click="{x:Bind ChatViewModel.SendMessageToTextChannel}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
 
                     <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="160">
                         <SplitView.Pane>
@@ -206,12 +208,12 @@
                     <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
                         <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateGuildPopUpOpen}">
                             <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Create a Server(Free)!"/>
+                                <TextBlock Margin="5" FontSize="16" Text="Create a Server"/>
                             </Border>
                         </Button>
                         <Button Click="{x:Bind ChatViewModel.JoinGuildPopUpOpen}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="Green" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Join a Server!"/>
+                            <Border Background="PaleGreen" CornerRadius="2">
+                                <TextBlock Margin="5" FontSize="16" Text="Join a Server"/>
                             </Border>
                         </Button>
                     </StackPanel>
@@ -220,44 +222,45 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateGuildPopUpOpenProperty,Mode=OneWay}">
-            <Grid MinWidth="400">
+            <Grid MinWidth="300">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Create Your Server" FontSize="18" FontWeight="Bold" Foreground="#7289DA"/>
                     <Grid Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                        <StackPanel>
-                            <TextBlock Text="Server's Name:" Foreground="#7289DA"/>
-                            <TextBlock Text="Server Location:" Foreground="#7289DA" Margin="0,20,0,0"/>
-                        </StackPanel>
 
-                        <StackPanel Margin="10,0,0,0" Grid.Column="1">
-                            <TextBox BorderThickness="0" Grid.Column="1" PlaceholderText="Enter a server name:" Text="{x:Bind ChatViewModel.NewGuildName,Mode=TwoWay}"/>
-                            <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
-                                <Button Content="Change Server" Background="#99AAB5" BorderThickness="1">
-                                    <Button.Flyout>
-                                        <MenuFlyout Placement="Left">
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Brazil"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Central Europe"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Hong Kong"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Russia"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Singapore"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Sydney"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US Central"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US East"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US South"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US West"/>
-                                            <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Western Europe"/>
-                                        </MenuFlyout>
-                                    </Button.Flyout>
-                                </Button>
-                                <TextBlock Foreground="#99AAB5" Margin="20,5,0,0" Text="{x:Bind ChatViewModel.NewGuildServer,Mode=OneWay}"/>
-                            </StackPanel>
+                        <TextBlock Text="Server's Name:" Foreground="#7289DA"/>
+                        <TextBox Margin="0,10,0,0" BorderThickness="0" Grid.Row="1" PlaceholderText="Enter a server name:" Text="{x:Bind ChatViewModel.NewGuildName,Mode=TwoWay}"/>
+
+                        <StackPanel Margin="0,10,0,0" Grid.Row="2" Orientation="Horizontal">
+                            <TextBlock Text="Server Location:" Foreground="#7289DA" Margin="0,5,0,0"/>
+                            <Button Margin="10,0,0,0" Content="Change Server" Background="#99AAB5" BorderThickness="1">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Left">
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Brazil"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Central Europe"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Hong Kong"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Russia"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Singapore"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Sydney"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US Central"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US East"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US South"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US West"/>
+                                        <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Western Europe"/>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
                         </StackPanel>
+                        <Border Margin="5,10,5,0" Grid.Row="3" Background="Transparent" BorderBrush="#7289DA" BorderThickness="1" CornerRadius="2">
+                            <TextBlock Foreground="#99AAB5" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.NewGuildServer,Mode=OneWay}"/>
+                        </Border>
                     </Grid>
                     <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
                         <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateGuildPopUpCreate}">
@@ -276,7 +279,7 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.JoinGuildPopUpOpenProperty,Mode=OneWay}">
-            <Grid  MinWidth="400">
+            <Grid  MinWidth="300">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Join a Server" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
@@ -301,7 +304,7 @@
         </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateChannelPopUpOpenProperty,Mode=OneWay}">
-            <Grid  MinWidth="400">
+            <Grid  MinWidth="300">
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Create Text Channel" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
@@ -323,6 +326,30 @@
                 </StackPanel>
             </Grid>
         </Popup>
+
+        <!--<Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
+            <Grid  MinWidth="300">
+                <Border CornerRadius="5" Background="#1e2124"/>
+                <StackPanel Margin="10">
+                    <TextBlock HorizontalAlignment="Center" Text="Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
+                    <TextBox Margin="0,20,0,5" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>
+                    <TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter your channel's prefered name!"/>
+
+                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                        <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateChannelPopUpCreate}">
+                            <Border Background="#7289DA" CornerRadius="2">
+                                <TextBlock Margin="5" FontSize="16" Text="Create"/>
+                            </Border>
+                        </Button>
+                        <Button Click="{x:Bind ChatViewModel.CreateChannelPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
+                            <Border Background="IndianRed" CornerRadius="2">
+                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
+                            </Border>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Popup>-->
 
         <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}" AutoPlay="True"/>
 
