@@ -100,4 +100,23 @@ namespace Discord_Mobile.Converters
             throw new NotImplementedException();
         }
     }
+
+    public class VoiceUsersToCountConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null && parameter != null)
+            {
+                int online = ((IReadOnlyCollection<SocketGuildUser>)(value)).Count;
+                return string.Format("(" + online + "/" + parameter + ")");
+            }
+            else
+                return "Ukn";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

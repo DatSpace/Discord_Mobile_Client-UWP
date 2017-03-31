@@ -14,6 +14,7 @@ using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -27,10 +28,50 @@ namespace Discord_Mobile.ViewModels
         private SocketTextChannel TextChannel;
         private SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTyping = new Collection<UsersTyping>();
+        private SocketSelfUser User;
+        private GuildPermissions GuildPermissions;
+        private ChannelPermissions TextChannelPermissions;
+        private ChannelPermissions VoiceChannelPermissions;
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void IsReady()
+        {
+            LoginService.client.Ready += Initialization;
+        }
+
+        private async Task Initialization()
+        {
+            ThreadPoolTimer timer = ThreadPoolTimer.CreatePeriodicTimer((t) =>
+            {
+                UpdateUserTypingStatus();
+            }, TimeSpan.FromSeconds(2));
+
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                User = LoginService.client.CurrentUser;
+                SetUser();
+                GuildsList = LoginService.client.Guilds;
+                LoadingPopUpIsOpen = false;
+            });
+
+            if (localSettings.Values["Enable_Sounds"] == null)
+                localSettings.Values["Enable_Sounds"] = true;
+
+            LoginService.client.MessageReceived += Message_Received;
+            LoginService.client.MessageDeleted += Message_Deleted;
+            LoginService.client.CurrentUserUpdated += User_Updated;
+            LoginService.client.LeftGuild += Joined_Guild;
+            LoginService.client.JoinedGuild += Joined_Guild;
+            LoginService.client.ChannelCreated += Channel_Created;
+            LoginService.client.ChannelDestroyed += Channel_Created;
+            LoginService.client.UserJoined += User_Joined;
+            LoginService.client.UserLeft += User_Joined;
+            LoginService.client.UserIsTyping += User_Typing;
+
         }
 
         private async void UpdateUserTypingStatus()
@@ -48,14 +89,14 @@ namespace Discord_Mobile.ViewModels
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     Users_Typing = "";
-                    foreach (var user in UsersTyping)
+                    foreach (var typinguser in UsersTyping)
                     {
                         if (Users_Typing == "")
                         {
-                            Users_Typing += user.Username;
+                            Users_Typing += typinguser.Username;
                         }
                         else
-                            Users_Typing += ", " + user.Username;
+                            Users_Typing += ", " + typinguser.Username;
                     }
 
                     if (Users_Typing == "")
@@ -64,41 +105,6 @@ namespace Discord_Mobile.ViewModels
                         Users_Typing_Visibility = true;
                 });
             }
-        }
-
-        public void IsReady()
-        {
-            LoginService.client.Ready += Initialization;
-        }
-
-        private async Task Initialization()
-        {
-            ThreadPoolTimer timer = ThreadPoolTimer.CreatePeriodicTimer((t) =>
-            {
-                UpdateUserTypingStatus();
-            }, TimeSpan.FromSeconds(2));
-
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                SetUser();
-                GuildsList = LoginService.client.Guilds;
-                ScreenHorizontalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Width / 10);
-                ScreenVerticalCenter = ((int)ApplicationView.GetForCurrentView().VisibleBounds.Height / 4);
-            });
-
-            if (localSettings.Values["Enable_Sounds"] == null)
-                localSettings.Values["Enable_Sounds"] = true;
-
-            LoginService.client.MessageReceived += Message_Received;
-            LoginService.client.MessageDeleted += Message_Deleted;
-            LoginService.client.CurrentUserUpdated += User_Updated;
-            LoginService.client.LeftGuild += Joined_Guild;
-            LoginService.client.JoinedGuild += Joined_Guild;
-            LoginService.client.ChannelCreated += Channel_Created;
-            LoginService.client.ChannelDestroyed += Channel_Created;
-            LoginService.client.UserJoined += User_Joined;
-            LoginService.client.UserLeft += User_Joined;
-            LoginService.client.UserIsTyping += User_Typing;
         }
 
         private async Task User_Typing(SocketUser arg1, ISocketMessageChannel arg2)
@@ -115,18 +121,16 @@ namespace Discord_Mobile.ViewModels
                     }
                     else
                     {
-                        foreach (var user in UsersTyping)
+                        foreach (var typinguser in UsersTyping)
                         {
-                            if (user.Username == arg1.Username)
+                            if (typinguser.Username == arg1.Username)
                             {
-                                user.TimeChecked = DateTime.Now;
+                                typinguser.TimeChecked = DateTime.Now;
                                 break;
                             }
                         }
                     }
                     UpdateUserTypingStatus();
-
-
                 });
             }
         }
@@ -140,11 +144,11 @@ namespace Discord_Mobile.ViewModels
                     await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         GuildUserList.Clear();
-                        foreach (SocketGuildUser user in Guild.Users)
+                        foreach (SocketGuildUser guilduser in Guild.Users)
                         {
-                            if (user.Status != UserStatus.Offline)
+                            if (guilduser.Status != UserStatus.Offline)
                             {
-                                GuildUserList.Add(user);
+                                GuildUserList.Add(guilduser);
                             }
                         }
                     });
@@ -189,8 +193,8 @@ namespace Discord_Mobile.ViewModels
         {
             try
             {
-                UserAvatar = LoginService.client.CurrentUser.GetAvatarUrl();
-                UserName = LoginService.client.CurrentUser.Username;
+                UserAvatar = User.GetAvatarUrl();
+                UserName = User.Username;
             }
             catch
             {
@@ -226,19 +230,25 @@ namespace Discord_Mobile.ViewModels
 
         public void SelectGuild(object sender, ItemClickEventArgs e)
         {
+            LoadingPopUpIsOpen = true;
             Guild = (SocketGuild)e.ClickedItem;
             NoGuildVisibility = Visibility.Collapsed;
             GuildSelectedText = Guild.Name;
             GuildChannelsList = Guild.Channels;
+            GuildPermissions = Guild.CurrentUser.GuildPermissions;
             SetChannels();
+            HasModifyChannelPermission = Visibility.Collapsed;
+            if (GuildPermissions.ManageChannels)
+                HasModifyChannelPermission = Visibility.Visible;
             GuildUserList.Clear();
-            foreach (SocketGuildUser user in Guild.Users)
+            foreach (SocketGuildUser guilduser in Guild.Users)
             {
-                if (user.Status != UserStatus.Offline)
+                if (guilduser.Status != UserStatus.Offline)
                 {
-                    GuildUserList.Add(user);
+                    GuildUserList.Add(guilduser);
                 }
             }
+            LoadingPopUpIsOpen = false;
         }
 
         private void SetChannels()
@@ -249,11 +259,17 @@ namespace Discord_Mobile.ViewModels
             {
                 if (tempchannel is SocketTextChannel)
                 {
-                    TextChannelsList.Add(tempchannel);
+                    if (Guild.CurrentUser.GetPermissions(tempchannel).ReadMessages)
+                    {
+                        TextChannelsList.Add(tempchannel);
+                    }
                 }
                 else
                 {
-                    VoiceChannelsList.Add(tempchannel);
+                    if (Guild.CurrentUser.GetPermissions(tempchannel).Connect)
+                    {
+                        VoiceChannelsList.Add(tempchannel);
+                    }
                 }
             }
 
@@ -273,7 +289,10 @@ namespace Discord_Mobile.ViewModels
 
         public async Task SelectTextChannel(object sender, ItemClickEventArgs e)
         {
+            LoadingPopUpIsOpen = true;
             TextChannel = (SocketTextChannel)e.ClickedItem;
+            HasSendMessagePermission = false;
+            TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
             NoChannelVisibility = Visibility.Collapsed;
             IEnumerable<IMessage> data = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
             messageList.Clear();
@@ -289,6 +308,11 @@ namespace Discord_Mobile.ViewModels
             }
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             TopMessage = TextChannel.Name;
+            if (TextChannelPermissions.SendMessages)
+            {
+                HasSendMessagePermission = true;
+            }
+            LoadingPopUpIsOpen = false;
         }
 
         public async Task SelectVoiceChannel(object sender, ItemClickEventArgs e)
@@ -296,6 +320,10 @@ namespace Discord_Mobile.ViewModels
             VoiceChannel = (SocketVoiceChannel)e.ClickedItem;
             var AudioClient = await VoiceChannel.ConnectAsync();
 
+            if (VoiceChannelPermissions.Speak)
+            {
+                //Allow them to transmit audio
+            }
 
         }
 
@@ -307,8 +335,10 @@ namespace Discord_Mobile.ViewModels
 
         public async Task SendMessageToTextChannel()
         {
+            LoadingPopUpIsOpen = true;
             await TextChannel?.SendMessageAsync(Message);
             Message = "";
+            LoadingPopUpIsOpen = false;
         }
 
         public void ChannelsSplitViewPaneControl(object sender, RoutedEventArgs e)
@@ -379,9 +409,11 @@ namespace Discord_Mobile.ViewModels
         {
             if (NewChannelName != "" && Guild != null)
             {
+                LoadingPopUpIsOpen = true;
                 Guild.CreateTextChannelAsync(NewChannelName);
                 CreateChannelPopUpOpenProperty = false;
                 NewChannelName = "";
+                LoadingPopUpIsOpen = false;
             }
         }
 
@@ -403,7 +435,67 @@ namespace Discord_Mobile.ViewModels
             NewGuildServer = selection;
         }
 
+        public void SetPopUpCenter(object sender, object e)
+        {
+            ScreenHorizontalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Width / 2) - (((Grid)sender).ActualWidth / 2));
+            ScreenVerticalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Height / 2) - (((Grid)sender).ActualHeight / 2));
+        }
+
         //######################################################################
+
+        private bool loadingPopUpIsOpen = true;
+
+        public bool LoadingPopUpIsOpen
+        {
+            get
+            {
+                return loadingPopUpIsOpen;
+            }
+            set
+            {
+                if (value != loadingPopUpIsOpen)
+                {
+                    loadingPopUpIsOpen = value;
+                    NotifyPropertyChanged("LoadingPopUpIsOpen");
+                }
+            }
+        }
+
+        private Visibility hasModifyChannelPermission = Visibility.Collapsed;
+
+        public Visibility HasModifyChannelPermission
+        {
+            get
+            {
+                return hasModifyChannelPermission;
+            }
+            set
+            {
+                if (value != hasModifyChannelPermission)
+                {
+                    hasModifyChannelPermission = value;
+                    NotifyPropertyChanged("HasModifyChannelPermission");
+                }
+            }
+        }
+
+        private bool hasSendMessagePermission = false;
+
+        public bool HasSendMessagePermission
+        {
+            get
+            {
+                return hasSendMessagePermission;
+            }
+            set
+            {
+                if (value != hasSendMessagePermission)
+                {
+                    hasSendMessagePermission = value;
+                    NotifyPropertyChanged("HasSendMessagePermission");
+                }
+            }
+        }
 
         private bool settingsPopUpOpenProperty = false;
 
