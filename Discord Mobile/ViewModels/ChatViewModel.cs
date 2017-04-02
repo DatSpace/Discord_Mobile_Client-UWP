@@ -214,14 +214,12 @@ namespace Discord_Mobile.ViewModels
                             UsersTyping.Remove(UsersTyping[i]);
                         }
                     }
-                    messageList.Add(arg);
+                    MessageList.Add(arg);
                     if ((bool)localSettings.Values["Enable_Sounds"])
                     {
                         SoundPath = null;
                         SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
                     }
-                    if (messageList.Count > NumOfMessages)
-                        messageList.Remove(messageList[0]);
                 });
             }
         }
@@ -292,17 +290,12 @@ namespace Discord_Mobile.ViewModels
             HasSendMessagePermission = false;
             TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
             NoChannelVisibility = Visibility.Collapsed;
-            IEnumerable<IMessage> data = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
-            messageList.Clear();
-            foreach (var item in data)
+            NumOfMessages = 30;
+            IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
+            MessageList.Clear();
+            foreach (var item in tempMessageList)
             {
-                messageList.Add(item);
-            }
-            for (int i = 0; i < messageList.Count / 2; i++)
-            {
-                IMessage temp = messageList[i];
-                messageList[i] = messageList[messageList.Count - i - 1];
-                messageList[messageList.Count - i - 1] = temp;
+                MessageList.Insert(0, item);
             }
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             TopMessage = TextChannel.Name;
@@ -311,6 +304,20 @@ namespace Discord_Mobile.ViewModels
                 HasSendMessagePermission = true;
             }
             LoadingPopUpIsOpen = false;
+        }
+
+        public async void LoadMoreMessages()
+        {
+            NumOfMessages += 30;
+            IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
+            foreach (IMessage item in tempMessageList)
+            {
+                //Compare the unique message id's, otherwise it's not working!
+                if (!MessageList.Any(x => x.Id == item.Id))
+                {
+                    MessageList.Insert(0, item);
+                }
+            }
         }
 
         public async Task SelectVoiceChannel(object sender, ItemClickEventArgs e)
@@ -329,6 +336,7 @@ namespace Discord_Mobile.ViewModels
         {
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             SettingsPopUpOpenProperty = true;
+            LoadMoreMessages();
         }
 
         public async Task SendMessageToTextChannel()
@@ -350,39 +358,14 @@ namespace Discord_Mobile.ViewModels
 
         }
 
-        public void AddGuildPopUp(object sender, RoutedEventArgs e)
-        {
-            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
-            AddGuildPopUpOpen = true;
-        }
-
-        public void JoinGuildPopUpOpen(object sender, RoutedEventArgs e)
-        {
-
-            AddGuildPopUpOpen = false;
-            JoinGuildPopUpOpenProperty = true;
-        }
-
-        public void JoinGuildPopUpCancel(object sender, RoutedEventArgs e)
-        {
-
-            JoinGuildPopUpOpenProperty = false;
-        }
-
-        public void JoinGuildPopUpJoin(object sender, RoutedEventArgs e)
-        {
-            //Not Supported yet!
-        }
-
         public void CreateGuildPopUpOpen(object sender, RoutedEventArgs e)
         {
-            AddGuildPopUpOpen = false;
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             CreateGuildPopUpOpenProperty = true;
         }
 
         public void CreateGuildPopUpCancel(object sender, RoutedEventArgs e)
         {
-
             CreateGuildPopUpOpenProperty = false;
         }
 
@@ -584,24 +567,6 @@ namespace Discord_Mobile.ViewModels
                 }
             }
         }
-
-        //private string joinGuildInvite = "";
-
-        //public string JoinGuildInvite
-        //{
-        //    get
-        //    {
-        //        return joinGuildInvite;
-        //    }
-        //    set
-        //    {
-        //        if (value != joinGuildInvite)
-        //        {
-        //            joinGuildInvite = value;
-        //            NotifyPropertyChanged("JoinGuildInvite");
-        //        }
-        //    }
-        //}
 
         private int screenHorizontalCenter = 1;
 
@@ -919,15 +884,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private ObservableCollection<IMessage> messageList = new ObservableCollection<IMessage>();
-
-        public ObservableCollection<IMessage> MessageList
-        {
-            get
-            {
-                return messageList;
-            }
-        }
+        public ObservableCollection<IMessage> MessageList = new ObservableCollection<IMessage>();
 
         private bool channelsSplitViewPaneOpen = false;
 

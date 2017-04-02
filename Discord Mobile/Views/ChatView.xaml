@@ -8,6 +8,7 @@
     xmlns:conv="using:Discord_Mobile.Converters"
     xmlns:discweb="using:Discord.WebSocket"
     xmlns:disc="using:Discord"
+    xmlns:toolkit="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -67,7 +68,7 @@
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
                             </ListView>
-                            <Button Click="{x:Bind ChatViewModel.AddGuildPopUp}" BorderThickness="0" Margin="0,10,0,0" Background="Transparent" HorizontalAlignment="Stretch">
+                            <Button Click="{x:Bind ChatViewModel.CreateGuildPopUpOpen}" BorderThickness="0" Margin="0,10,0,0" Background="Transparent" HorizontalAlignment="Stretch">
                                 <RelativePanel>
                                     <Ellipse Name="AddChannelCircle" Width="40" Height="40" Fill="Transparent" StrokeDashArray="2.5" Stroke="#99AAB5" StrokeThickness="1"/>
                                     <Line Stroke="#99AAB5" RelativePanel.AlignHorizontalCenterWith="AddChannelCircle" RelativePanel.AlignVerticalCenterWith="AddChannelCircle" X2="10"/>
@@ -157,7 +158,7 @@
                     </StackPanel>
 
 
-                    <ListView Margin="0,0,0,20" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.IsHorizontalRailEnabled="False" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None">
+                    <toolkit:PullToRefreshListView PullThreshold="50" ReleaseToRefreshLabel="Realease to load more..." PullToRefreshLabel="Pull to load more..." RefreshRequested="{x:Bind ChatViewModel.LoadMoreMessages}" Margin="0,0,0,20" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -195,13 +196,13 @@
                                             <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserNameToNicknameConverter}}" Foreground="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserToColorConverter}}" FontSize="16" FontWeight="Bold"/>
                                             <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="10"/>
                                         </StackPanel>
-                                        
+
                                         <TextBlock Grid.Row="1" TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
                                     </Grid>
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
-                    </ListView>
+                    </toolkit:PullToRefreshListView>
                     <StackPanel Visibility="{x:Bind ChatViewModel.Users_Typing_Visibility,Mode=OneWay}" Margin="0,0,0,5" VerticalAlignment="Bottom" Orientation="Horizontal">
                         <Image Height="10" Width="10" Source="/Assets/typing.gif" Margin="10,0,0,0"/>
                         <TextBlock Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Converter={StaticResource UserTypingConverter},Mode=OneWay}" Foreground="#99AAB5"/>
@@ -234,27 +235,6 @@
                 </Grid>
             </SplitView.Content>
         </SplitView>
-
-        <Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.AddGuildPopUpOpen,Mode=TwoWay}">
-            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}">
-                <Border CornerRadius="5" Background="#1e2124"/>
-                <StackPanel Margin="10">
-                    <TextBlock HorizontalAlignment="Center" Text="Ehhm, what do you want to do ?" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                        <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateGuildPopUpOpen}">
-                            <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Create a Server"/>
-                            </Border>
-                        </Button>
-                        <Button Click="{x:Bind ChatViewModel.JoinGuildPopUpOpen}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="PaleGreen" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Join a Server"/>
-                            </Border>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateGuildPopUpOpenProperty,Mode=OneWay}">
             <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
@@ -304,31 +284,6 @@
                             </Border>
                         </Button>
                         <Button Click="{x:Bind ChatViewModel.CreateGuildPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="IndianRed" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
-                            </Border>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Popup>
-
-        <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.JoinGuildPopUpOpenProperty,Mode=OneWay}">
-            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
-                <Border CornerRadius="5" Background="#1e2124"/>
-                <StackPanel Margin="10">
-                    <TextBlock HorizontalAlignment="Center" Text="Join a Server" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <TextBox IsEnabled="False" Margin="0,20,0,5" PlaceholderText="Type the full invite URL..." BorderThickness="0"/>
-                    <TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter the full invitation URL!"/>
-                    <TextBlock Margin="0,5,0,0" FontSize="10" Foreground="Red" Text="Sorry, not supported yet!"/>
-
-                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                        <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.JoinGuildPopUpJoin}">
-                            <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Join Server"/>
-                            </Border>
-                        </Button>
-                        <Button Click="{x:Bind ChatViewModel.JoinGuildPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
                             <Border Background="IndianRed" CornerRadius="2">
                                 <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
                             </Border>
