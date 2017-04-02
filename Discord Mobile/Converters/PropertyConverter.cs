@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -43,36 +44,18 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Discord.Color userColor;
+            Discord.Color userColor = new Discord.Color(255,255,255);
 
             if (value.GetType() == typeof(SocketGuildUser))
             {
-                userColor = ((SocketGuildUser)value).Roles.OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? Discord.Color.Default;
+                userColor = ((SocketGuildUser)value).Roles.OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? userColor;
             }
-            else
+            else if (value.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
             {
-                userColor = ((IEnumerable<SocketRole>)value).OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? Discord.Color.Default;
+                userColor = ((IEnumerable<SocketRole>)value).OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? userColor;
             }
 
-            uint red = userColor.R;
-            uint green = userColor.G;
-            uint blue = userColor.B;
-
-            if (userColor.RawValue != Discord.Color.Default.RawValue)
-            {
-                red = userColor.R;
-                green = userColor.G;
-                blue = userColor.B;
-            }
-            else
-            {
-                red = 255;
-                green = 255;
-                blue = 255;
-            }
-
-
-            SolidColorBrush color = new SolidColorBrush(Windows.UI.Color.FromArgb(255,(byte)red, (byte)green, (byte)blue));
+            SolidColorBrush color = new SolidColorBrush(Windows.UI.Color.FromArgb(255,userColor.R, userColor.G, userColor.B));
             
             return color;
         }
@@ -87,11 +70,18 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            BitmapImage image;
-            if (value == null)
-                image = new BitmapImage(new Uri("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"));
-            else
-                image = new BitmapImage(new Uri(((SocketGuildUser)value).GetAvatarUrl()));
+            BitmapImage image = new BitmapImage(new Uri("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"));
+            if (value != null)
+            {
+                string url;
+                if (value.GetType() == typeof(SocketGuildUser))
+                    url = ((SocketGuildUser)value).GetAvatarUrl();
+                else
+                    url = ((RestUser)value).GetAvatarUrl();
+
+                if (url != null)
+                    image = new BitmapImage(new Uri(url));
+            }
             return image;
         }
 

@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord.Rest;
+using Discord.WebSocket;
 using System;
 using Windows.UI.Xaml.Data;
 
@@ -30,17 +31,23 @@ namespace Discord_Mobile.Converters
         {
             if (value != null)
             {
-                string usernickname = ((SocketGuildUser)value).Nickname;
-                if (usernickname != null && usernickname != "")
-                    return usernickname;
+                string usernickname;
+
+                if (value is RestUser)
+                    usernickname = ((RestUser)value).Username;
                 else
                 {
-                    int temp = value.ToString().LastIndexOf('#');
-                    return value.ToString().Substring(0, temp);
+                    usernickname = ((SocketGuildUser)value).Nickname;
+                    if (usernickname == null || usernickname == "")
+                    {
+                        int temp = value.ToString().LastIndexOf('#');
+                        return value.ToString().Substring(0, temp);
+                    }
                 }
-
+                return usernickname;
             }
-            return value;
+            else
+                return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

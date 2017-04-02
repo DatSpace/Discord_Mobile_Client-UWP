@@ -25,6 +25,8 @@ namespace Discord_Mobile.ViewModels
         {
             LoginService.DeleteUser();
 
+            LoginService.client.LogoutAsync();
+
             Frame rootFrame = Window.Current.Content as Frame;
             rootFrame.Navigate(typeof(LoginView));
         }

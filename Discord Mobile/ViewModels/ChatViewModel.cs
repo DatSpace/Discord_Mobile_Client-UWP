@@ -14,7 +14,6 @@ using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -71,7 +70,6 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
-
         }
 
         private async void UpdateUserTypingStatus()
