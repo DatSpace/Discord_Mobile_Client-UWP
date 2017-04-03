@@ -236,15 +236,22 @@ namespace Discord_Mobile.ViewModels
             HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
+            SetUsersList(null, null);
+            LoadingPopUpIsOpen = false;
+        }
+
+        public void SetUsersList(object sender, TextChangedEventArgs e)
+        {
             GuildUserList.Clear();
+            if (sender != null)
+                SearchUsersText = ((TextBox)sender).Text;
+            else
+                SearchUsersText = "";
             foreach (SocketGuildUser guilduser in Guild.Users)
             {
-                if (guilduser.Status != UserStatus.Offline)
-                {
+                if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
                     GuildUserList.Add(guilduser);
-                }
             }
-            LoadingPopUpIsOpen = false;
         }
 
         private void SetChannels()
@@ -423,6 +430,24 @@ namespace Discord_Mobile.ViewModels
         }
 
         //######################################################################
+
+        private string searchUserText = "";
+
+        public string SearchUsersText
+        {
+            get
+            {
+                return searchUserText;
+            }
+            set
+            {
+                if (value != searchUserText)
+                {
+                    searchUserText = value;
+                    NotifyPropertyChanged("SearchUserText");
+                }
+            }
+        }
 
         private bool loadingPopUpIsOpen = true;
 
