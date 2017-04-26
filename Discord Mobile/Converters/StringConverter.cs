@@ -56,35 +56,35 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    class UserTypingConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            if (value != null)
-            {
-                if (value.ToString().Length > 20)
-                {
-                    while (value.ToString().Length > 20)
-                    {
-                        int tempindex;
-                        tempindex = value.ToString().LastIndexOf(",");
-                        value.ToString().Substring(0, tempindex);
-                    }
-                    value += " and more are typing...";
-                }
-                else if (!value.ToString().Contains(","))
-                    value += " is typing...";
-                else
-                    value += " are typing...";
-            }
-            return value;
-        }
+    //class UserTypingConverter : IValueConverter
+    //{
+    //    public object Convert(object value, Type targetType, object parameter, string language)
+    //    {
+    //        if (value != null)
+    //        {
+    //            if (value.ToString().Length > 20)
+    //            {
+    //                while (value.ToString().Length > 20)
+    //                {
+    //                    int tempindex;
+    //                    tempindex = value.ToString().LastIndexOf(",");
+    //                    value.ToString().Substring(0, tempindex);
+    //                }
+    //                value += " and more are typing...";
+    //            }
+    //            else if (!value.ToString().Contains(","))
+    //                value += " is typing...";
+    //            else
+    //                value += " are typing...";
+    //        }
+    //        return value;
+    //    }
 
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 
     class ChannelTopTextConverter : IValueConverter
     {

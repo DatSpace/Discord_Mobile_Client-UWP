@@ -47,6 +47,11 @@ namespace Discord_Mobile.ViewModels
         {
             get
             {
+                if (localSettings.Values["Enable_Sounds"] == null)
+                {
+                    localSettings.Values["Enable_Sounds"] = true;
+                    return true;
+                }
                 return (bool)localSettings.Values["Enable_Sounds"];
             }
             set

@@ -7,7 +7,8 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return value.ToString().Substring(0,16);
+            string time = ((DateTimeOffset)value).LocalDateTime.ToString();
+            return time.Substring(0,16);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

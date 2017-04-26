@@ -17,13 +17,14 @@
         <conv:TimeToStringConverter x:Key="TimeToStringConverter"/>
         <conv:ChannelNameConverter x:Key="ChannelNameConverter"/>
         <conv:UserNameToNicknameConverter x:Key="UserNameToNicknameConverter"/>
-        <conv:UserTypingConverter x:Key="UserTypingConverter"/>
         <conv:ChannelTopTextConverter x:Key="ChannelTopTextConverter"/>
         <conv:StatusToColorConverter x:Key="StatusToColorConverter"/>
         <conv:PlaceholderConverter x:Key="PlaceholderConverter"/>
         <conv:UserToColorConverter x:Key="UserToColorConverter"/>
         <conv:AuthorToAvatarConverter x:Key="AuthorToAvatarConverter"/>
         <conv:VoiceUsersToCountConverter x:Key="VoiceUsersToCountConverter"/>
+        <conv:DiscordColorToColorConverter x:Key="DiscordColorToColorConverter"/>
+        <conv:GuildToNonOfflineGuildUsersConverter x:Key="GuildToNonOfflineGuildUsersConverter"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
     </Page.Resources>
@@ -108,7 +109,7 @@
                                         <Button Visibility="{x:Bind ChatViewModel.HasModifyChannelPermission,Mode=OneWay}" Margin="5,0,0,0" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
                                     </StackPanel>
                                     <TextBlock Margin="10,5,0,10" FontSize="10" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
-                                    <ListView ItemClick="{x:Bind ChatViewModel.SelectVoiceChannel}" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}" IsItemClickEnabled="False">
+                                    <ListView ItemClick="{x:Bind ChatViewModel.SelectVoiceChannel}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}">
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="discweb:SocketVoiceChannel">
                                                 <StackPanel>
@@ -205,7 +206,7 @@
                     </toolkit:PullToRefreshListView>
                     <StackPanel Visibility="{x:Bind ChatViewModel.Users_Typing_Visibility,Mode=OneWay}" Margin="0,0,0,5" VerticalAlignment="Bottom" Orientation="Horizontal">
                         <Image Height="10" Width="10" Source="/Assets/typing.gif" Margin="10,0,0,0"/>
-                        <TextBlock Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Converter={StaticResource UserTypingConverter},Mode=OneWay}" Foreground="#99AAB5"/>
+                        <TextBlock Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Mode=OneWay}" Foreground="#99AAB5"/>
                     </StackPanel>
 
                     <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="160">
@@ -220,18 +221,27 @@
                                     <TextBox BorderThickness="0" TextChanged="{x:Bind ChatViewModel.SetUsersList}" PlaceholderText="Search..." Text="{x:Bind ChatViewModel.SearchUsersText,Mode=OneWay}"/>
                                     <TextBlock Margin="10,10,0,0" FontWeight="Bold" Text="Users" FontSize="10" Foreground="#99AAB5"/>
                                 </StackPanel>
-                                <ListView Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.IsHorizontalRailEnabled="False" ItemsSource="{x:Bind ChatViewModel.GuildUserList, Mode=OneWay}" SelectionMode="None">
+                                <ListView Grid.Row="1" ItemsSource="{x:Bind ChatViewModel.GuildRoles, Mode=OneWay}" SelectionMode="None">
                                     <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="discweb:SocketGuildUser">
-                                            <RelativePanel HorizontalAlignment="Stretch">
-                                                <Ellipse Name="UserAvatarElipse" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Width="25" Height="25">
-                                                    <Ellipse.Fill>
-                                                        <ImageBrush ImageSource="{x:Bind AvatarId, Mode=OneWay,Converter={StaticResource AvatarIdToUrlConverter},ConverterParameter={Binding Discriminator,Mode=OneWay}}"/>
-                                                    </Ellipse.Fill>
-                                                </Ellipse>
-                                                <Ellipse Stroke="Black" StrokeThickness="1" RelativePanel.AlignRightWith="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Fill="{x:Bind Status,Converter={StaticResource StatusToColorConverter}}" Width="8" Height="8" Margin="0,20,0,0"/>
-                                                <TextBlock RelativePanel.RightOf="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Margin="5,0,0,0" Text="{x:Bind Username,Mode=OneWay, Converter={StaticResource ChannelNameConverter}}" FontSize="12" FontWeight="Bold" Foreground="{x:Bind Roles,Mode=OneWay,Converter={StaticResource UserToColorConverter}}"/>
-                                            </RelativePanel>
+                                        <DataTemplate x:DataType="discweb:SocketRole">
+                                            <StackPanel>
+                                                <TextBlock Margin="10,10,0,10" Text="{x:Bind Name,Mode=OneWay}" Foreground="{x:Bind Color,Converter={StaticResource DiscordColorToColorConverter}, Mode=OneWay}"/>
+                                                <!--<ListView ItemsSource="{x:Bind Guild,Converter={StaticResource GuildToNonOfflineGuildUsersConverter},ConverterParameter={x:Bind Name}, Mode=OneWay}" SelectionMode="None">
+                                                    <ListView.ItemTemplate>
+                                                        <DataTemplate x:DataType="discweb:SocketGuildUser">
+                                                            <RelativePanel HorizontalAlignment="Stretch">
+                                                                <Ellipse Name="UserAvatarElipse" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Width="25" Height="25">
+                                                                    <Ellipse.Fill>
+                                                                        <ImageBrush ImageSource="{x:Bind AvatarId, Mode=OneWay,Converter={StaticResource AvatarIdToUrlConverter},ConverterParameter={Binding Discriminator,Mode=OneWay}}"/>
+                                                                    </Ellipse.Fill>
+                                                                </Ellipse>
+                                                                <Ellipse Stroke="Black" StrokeThickness="1" RelativePanel.AlignRightWith="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Fill="{x:Bind Status,Converter={StaticResource StatusToColorConverter}}" Width="8" Height="8" Margin="0,20,0,0"/>
+                                                                <TextBlock RelativePanel.RightOf="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Margin="5,0,0,0" Text="{x:Bind Username,Mode=OneWay, Converter={StaticResource ChannelNameConverter}}" FontSize="12" FontWeight="Bold" Foreground="{x:Bind Roles,Mode=OneWay,Converter={StaticResource UserToColorConverter}}"/>
+                                                            </RelativePanel>
+                                                        </DataTemplate>
+                                                    </ListView.ItemTemplate>
+                                                </ListView>-->
+                                            </StackPanel>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
@@ -381,7 +391,7 @@
         <TextBox IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource PlaceholderConverter}}" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
         <Button IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Foreground="White" FontSize="24" Click="{x:Bind ChatViewModel.SendMessageToTextChannel}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
 
-        <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}" AutoPlay="True"/>
+        <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}"/>
 
     </Grid>
 </Page>

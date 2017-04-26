@@ -3,6 +3,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml.Data;
@@ -83,6 +84,65 @@ namespace Discord_Mobile.Converters
                     image = new BitmapImage(new Uri(url));
             }
             return image;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class GuildToNonOfflineGuildUsersConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null && parameter != null)
+            {
+                IReadOnlyCollection<SocketGuildUser> AllUsers = ((SocketGuild)value).Users;
+                Collection<SocketGuildUser> FilteredUsers = new Collection<SocketGuildUser>();
+                string GuildRoleName = ((SocketGuild)value).Roles.OrderByDescending(x => x.Position).First().Name;
+                foreach (SocketGuildUser user in AllUsers)
+                {
+                    string UserRoleName = null;
+                    if (user.GetType() == typeof(SocketGuildUser))
+                    {
+                        UserRoleName = ((SocketGuildUser)value).Roles.OrderByDescending(x => x.Position).First().Name;
+                    }
+                    else if (user.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
+                    {
+                        UserRoleName = ((IEnumerable<SocketRole>)value).OrderByDescending(x => x.Position).First().Name;
+                    }
+
+                    if (user.Username != null && user.Status != UserStatus.Offline && UserRoleName == GuildRoleName)
+                        FilteredUsers.Add(user);
+                }
+                return FilteredUsers;
+            }
+            else
+                return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class DiscordColorToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            Discord.Color RoleColor = new Discord.Color(255, 255, 255);
+            SolidColorBrush color = new SolidColorBrush();
+
+            if (value != null)
+            {
+                if (((Discord.Color)value).RawValue != Discord.Color.Default.RawValue)
+                    RoleColor = (Discord.Color)value;
+                color = new SolidColorBrush(Windows.UI.Color.FromArgb(255, RoleColor.R, RoleColor.G, RoleColor.B));
+            }
+
+            return color;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

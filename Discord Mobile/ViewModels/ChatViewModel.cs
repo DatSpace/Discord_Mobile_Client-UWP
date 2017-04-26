@@ -14,6 +14,9 @@ using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
+using Discord.Audio;
+using Windows.Storage.Streams;
+using System.IO;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -24,13 +27,14 @@ namespace Discord_Mobile.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         private Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         private SocketGuild Guild;
-        private SocketTextChannel TextChannel;
-        private SocketVoiceChannel VoiceChannel;
+        private static SocketTextChannel TextChannel;
+        public static SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTyping = new Collection<UsersTyping>();
-        private SocketSelfUser User;
+        private static SocketSelfUser User;
         private GuildPermissions GuildPermissions;
         private ChannelPermissions TextChannelPermissions;
         private ChannelPermissions VoiceChannelPermissions;
+
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
@@ -57,9 +61,6 @@ namespace Discord_Mobile.ViewModels
                 LoadingPopUpIsOpen = false;
             });
 
-            if (localSettings.Values["Enable_Sounds"] == null)
-                localSettings.Values["Enable_Sounds"] = true;
-
             LoginService.client.MessageReceived += Message_Received;
             LoginService.client.MessageDeleted += Message_Deleted;
             LoginService.client.CurrentUserUpdated += User_Updated;
@@ -70,11 +71,20 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
+            //LoginService.client.Log += Client_Log;
         }
+
+        //private Task Client_Log(LogMessage arg)
+        //{
+        //    if (VoiceChannel != null && arg.Message == "Disconnected")
+        //        throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
+        //    else
+        //        return null;
+        //}
 
         private async void UpdateUserTypingStatus()
         {
-            if (UsersTyping != null)
+            if (TextChannel != null && UsersTyping != null)
             {
                 for (int i = 0; i < UsersTyping.Count; i++)
                 {
@@ -87,20 +97,39 @@ namespace Discord_Mobile.ViewModels
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     Users_Typing = "";
-                    foreach (var typinguser in UsersTyping)
-                    {
-                        if (Users_Typing == "")
-                        {
-                            Users_Typing += typinguser.Username;
-                        }
-                        else
-                            Users_Typing += ", " + typinguser.Username;
-                    }
 
-                    if (Users_Typing == "")
-                        Users_Typing_Visibility = false;
-                    else
+                    if (UsersTyping.Count >= 3)
+                    {
                         Users_Typing_Visibility = true;
+                        Users_Typing = "Several users are typing...";
+                    }
+                    else if (UsersTyping.Count == 2)
+                    {
+                        Users_Typing_Visibility = true;
+                        Users_Typing = UsersTyping[0].Username + ", " + UsersTyping[1] + " are typing...";
+                    }
+                    else if (UsersTyping.Count == 1)
+                    {
+                        Users_Typing_Visibility = true;
+                        Users_Typing = UsersTyping[0].Username + " is typing...";
+                    }
+                    else
+                        Users_Typing_Visibility = false;
+
+                    //foreach (var typinguser in UsersTyping)
+                    //{
+                    //    if (Users_Typing == "")
+                    //    {
+                    //        Users_Typing += typinguser.Username;
+                    //    }
+                    //    else
+                    //        Users_Typing += ", " + typinguser.Username;
+                    //}
+
+                    //if (Users_Typing == "")
+                    //    Users_Typing_Visibility = false;
+                    //else
+                    //    Users_Typing_Visibility = true;
                 });
             }
         }
@@ -128,14 +157,14 @@ namespace Discord_Mobile.ViewModels
                             }
                         }
                     }
-                    UpdateUserTypingStatus();
                 });
+                UpdateUserTypingStatus();
             }
         }
 
         private async Task User_Joined(SocketGuildUser arg)
         {
-            if (Guild != null)
+            if (Guild != null && arg.Guild == Guild)
             {
                 if (Guild.Users.Count < 500)
                 {
@@ -236,22 +265,27 @@ namespace Discord_Mobile.ViewModels
             HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
-            SetUsersList(null, null);
+            //GuildRoles = ;
+            //Breaks Bind
+            OrderRoles(Guild.Roles);
             LoadingPopUpIsOpen = false;
         }
 
         public void SetUsersList(object sender, TextChangedEventArgs e)
         {
-            GuildUserList.Clear();
-            if (sender != null)
-                SearchUsersText = ((TextBox)sender).Text;
-            else
-                SearchUsersText = "";
-            foreach (SocketGuildUser guilduser in Guild.Users)
-            {
-                if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
-                    GuildUserList.Add(guilduser);
-            }
+            //if (Guild != null)
+            //{
+            //    GuildUserList.Clear();
+            //    if (sender != null)
+            //        SearchUsersText = ((TextBox)sender).Text;
+            //    else
+            //        SearchUsersText = "";
+            //    foreach (SocketGuildUser guilduser in Guild.Users)
+            //    {
+            //        if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
+            //            GuildUserList.Add(guilduser);
+            //    }
+            //}
         }
 
         private void SetChannels()
@@ -276,18 +310,25 @@ namespace Discord_Mobile.ViewModels
                 }
             }
 
-            TextChannelsList = OrderThoseGroups(TextChannelsList);
-            VoiceChannelsList = OrderThoseGroups(VoiceChannelsList);
+            TextChannelsList = OrderChannels(TextChannelsList);
+            VoiceChannelsList = OrderChannels(VoiceChannelsList);
         }
 
-        public static ObservableCollection<SocketGuildChannel> OrderThoseGroups(ObservableCollection<SocketGuildChannel> orderThoseGroups)
+        private static ObservableCollection<SocketRole> OrderRoles(IReadOnlyCollection<SocketRole> roles)
+        {
+            ObservableCollection<SocketRole> temp;
+            temp = new ObservableCollection<SocketRole>(roles.OrderBy(p => p.Position));
+            return temp;
+        }
+
+        private static ObservableCollection<SocketGuildChannel> OrderChannels(ObservableCollection<SocketGuildChannel> channels)
         {
             ObservableCollection<SocketGuildChannel> temp;
-            temp = new ObservableCollection<SocketGuildChannel>(orderThoseGroups.OrderBy(p => p.Position));
-            orderThoseGroups.Clear();
+            temp = new ObservableCollection<SocketGuildChannel>(channels.OrderBy(p => p.Position));
+            channels.Clear();
             foreach (SocketGuildChannel j in temp)
-                orderThoseGroups.Add(j);
-            return orderThoseGroups;
+                channels.Add(j);
+            return channels;
         }
 
         public async Task SelectTextChannel(object sender, ItemClickEventArgs e)
@@ -296,7 +337,6 @@ namespace Discord_Mobile.ViewModels
             TextChannel = (SocketTextChannel)e.ClickedItem;
             HasSendMessagePermission = false;
             TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
-            NoChannelVisibility = Visibility.Collapsed;
             NumOfMessages = 30;
             IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
             MessageList.Clear();
@@ -310,6 +350,10 @@ namespace Discord_Mobile.ViewModels
             {
                 HasSendMessagePermission = true;
             }
+            if (MessageList.Count > 0)
+                NoChannelVisibility = Visibility.Collapsed;
+            else
+                NoChannelMessage = "No Messages Yet :/";
             LoadingPopUpIsOpen = false;
         }
 
@@ -330,20 +374,18 @@ namespace Discord_Mobile.ViewModels
         public async Task SelectVoiceChannel(object sender, ItemClickEventArgs e)
         {
             VoiceChannel = (SocketVoiceChannel)e.ClickedItem;
-            var AudioClient = await VoiceChannel.ConnectAsync();
 
-            if (VoiceChannelPermissions.Speak)
-            {
-                //Allow them to transmit audio
-            }
+            //await Task.Run(() => VoiceService.Initialize());
 
+            //if (VoiceChannelPermissions.Speak)
+            //{
+            //}
         }
 
         public void SettingsPopUpOpen()
         {
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             SettingsPopUpOpenProperty = true;
-            LoadMoreMessages();
         }
 
         public async Task SendMessageToTextChannel()
@@ -430,6 +472,24 @@ namespace Discord_Mobile.ViewModels
         }
 
         //######################################################################
+
+        public ObservableCollection<SocketRole> GuildRoles;
+
+        //public IReadOnlyCollection<SocketRole> GuildRoles
+        //{
+        //    get
+        //    {
+        //        return guildRoles;
+        //    }
+        //    set
+        //    {
+        //        if (value != guildRoles)
+        //        {
+        //            guildRoles = value;
+        //            NotifyPropertyChanged("GuildRoles");
+        //        }
+        //    }
+        //}
 
         private string searchUserText = "";
 
