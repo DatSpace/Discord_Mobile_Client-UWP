@@ -14,9 +14,6 @@ using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
-using Discord.Audio;
-using Windows.Storage.Streams;
-using System.IO;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -33,7 +30,7 @@ namespace Discord_Mobile.ViewModels
         private static SocketSelfUser User;
         private GuildPermissions GuildPermissions;
         private ChannelPermissions TextChannelPermissions;
-        private ChannelPermissions VoiceChannelPermissions;
+        //private ChannelPermissions VoiceChannelPermissions;
 
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
@@ -265,27 +262,36 @@ namespace Discord_Mobile.ViewModels
             HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
-            //GuildRoles = ;
-            //Breaks Bind
-            OrderRoles(Guild.Roles);
+            SetUsersList(null,null);
+            GuildRoles = GetOrderedRoles(Guild.Roles);
             LoadingPopUpIsOpen = false;
         }
 
-        public void SetUsersList(object sender, TextChangedEventArgs e)
+        private ObservableCollection<SocketRole> GetOrderedRoles(IReadOnlyCollection<SocketRole> roles)
         {
-            //if (Guild != null)
-            //{
-            //    GuildUserList.Clear();
-            //    if (sender != null)
-            //        SearchUsersText = ((TextBox)sender).Text;
-            //    else
-            //        SearchUsersText = "";
-            //    foreach (SocketGuildUser guilduser in Guild.Users)
-            //    {
-            //        if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
-            //            GuildUserList.Add(guilduser);
-            //    }
-            //}
+            ObservableCollection<SocketRole> temp = new ObservableCollection<SocketRole>(roles.OrderByDescending(p => p.Position));
+            GuildRoles.Clear();
+            foreach (SocketRole j in temp)
+                if (j.IsHoisted)
+                    GuildRoles.Add(j);
+            return GuildRoles;
+        }
+
+        public void SetUsersList(object sender, TextChangedEventArgs e)//Change name to Filter
+        {
+            if (Guild != null)
+            {
+                GuildUserList.Clear();
+                if (sender != null)
+                    SearchUsersText = ((TextBox)sender).Text;
+                else
+                    SearchUsersText = "";
+                foreach (SocketGuildUser guilduser in Guild.Users)
+                {
+                    if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
+                        GuildUserList.Add(guilduser);
+                }
+            }
         }
 
         private void SetChannels()
@@ -312,13 +318,6 @@ namespace Discord_Mobile.ViewModels
 
             TextChannelsList = OrderChannels(TextChannelsList);
             VoiceChannelsList = OrderChannels(VoiceChannelsList);
-        }
-
-        private static ObservableCollection<SocketRole> OrderRoles(IReadOnlyCollection<SocketRole> roles)
-        {
-            ObservableCollection<SocketRole> temp;
-            temp = new ObservableCollection<SocketRole>(roles.OrderBy(p => p.Position));
-            return temp;
         }
 
         private static ObservableCollection<SocketGuildChannel> OrderChannels(ObservableCollection<SocketGuildChannel> channels)
@@ -473,7 +472,7 @@ namespace Discord_Mobile.ViewModels
 
         //######################################################################
 
-        public ObservableCollection<SocketRole> GuildRoles;
+        public ObservableCollection<SocketRole> GuildRoles = new ObservableCollection<SocketRole>();
 
         //public IReadOnlyCollection<SocketRole> GuildRoles
         //{
@@ -871,7 +870,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public ObservableCollection<SocketGuildUser> GuildUserList = new ObservableCollection<SocketGuildUser>();
+        public static ObservableCollection<SocketGuildUser> GuildUserList = new ObservableCollection<SocketGuildUser>();
 
         public ObservableCollection<SocketGuildChannel> TextChannelsList = new ObservableCollection<SocketGuildChannel>();
         public ObservableCollection<SocketGuildChannel> VoiceChannelsList = new ObservableCollection<SocketGuildChannel>();

@@ -12,7 +12,7 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <conv:IconIdToUrlConverter x:Key="IconIdToUrlConverter"/>
+        <conv:UrlToImageConverter x:Key="UrlToImageConverter"/>
         <conv:AvatarIdToUrlConverter x:Key="AvatarIdToUrlConverter"/>
         <conv:TimeToStringConverter x:Key="TimeToStringConverter"/>
         <conv:ChannelNameConverter x:Key="ChannelNameConverter"/>
@@ -22,9 +22,9 @@
         <conv:PlaceholderConverter x:Key="PlaceholderConverter"/>
         <conv:UserToColorConverter x:Key="UserToColorConverter"/>
         <conv:AuthorToAvatarConverter x:Key="AuthorToAvatarConverter"/>
-        <conv:VoiceUsersToCountConverter x:Key="VoiceUsersToCountConverter"/>
-        <conv:DiscordColorToColorConverter x:Key="DiscordColorToColorConverter"/>
-        <conv:GuildToNonOfflineGuildUsersConverter x:Key="GuildToNonOfflineGuildUsersConverter"/>
+        <!--<conv:VoiceUsersToCountConverter x:Key="VoiceUsersToCountConverter"/>-->
+        <!--<conv:DiscordColorToColorConverter x:Key="DiscordColorToColorConverter"/>-->
+        <conv:RoleNameToRoleUsersConverter x:Key="RoleNameToRoleUsersConverter"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
     </Page.Resources>
@@ -63,7 +63,7 @@
                                     <DataTemplate x:DataType="discweb:SocketGuild">
                                         <Ellipse Margin="0,5,0,5" Width="40" Height="40">
                                             <Ellipse.Fill>
-                                                <ImageBrush ImageSource="{x:Bind IconId, Mode=OneWay,Converter={StaticResource IconIdToUrlConverter},ConverterParameter={Binding Id,Mode=OneWay}}"/>
+                                                <ImageBrush ImageSource="{x:Bind IconUrl, Mode=OneWay,Converter={StaticResource UrlToImageConverter}}"/>
                                             </Ellipse.Fill>
                                         </Ellipse>
                                     </DataTemplate>
@@ -225,14 +225,14 @@
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="discweb:SocketRole">
                                             <StackPanel>
-                                                <TextBlock Margin="10,10,0,10" Text="{x:Bind Name,Mode=OneWay}" Foreground="{x:Bind Color,Converter={StaticResource DiscordColorToColorConverter}, Mode=OneWay}"/>
-                                                <!--<ListView ItemsSource="{x:Bind Guild,Converter={StaticResource GuildToNonOfflineGuildUsersConverter},ConverterParameter={x:Bind Name}, Mode=OneWay}" SelectionMode="None">
+                                                <TextBlock Margin="5,10,0,10" Text="{x:Bind Name,Mode=OneWay}" FontWeight="Bold" Foreground="Gray"/>
+                                                <ListView Margin="10,0,0,0" ItemsSource="{x:Bind Name,Converter={StaticResource RoleNameToRoleUsersConverter}, Mode=OneWay}" SelectionMode="None">
                                                     <ListView.ItemTemplate>
                                                         <DataTemplate x:DataType="discweb:SocketGuildUser">
                                                             <RelativePanel HorizontalAlignment="Stretch">
                                                                 <Ellipse Name="UserAvatarElipse" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Width="25" Height="25">
                                                                     <Ellipse.Fill>
-                                                                        <ImageBrush ImageSource="{x:Bind AvatarId, Mode=OneWay,Converter={StaticResource AvatarIdToUrlConverter},ConverterParameter={Binding Discriminator,Mode=OneWay}}"/>
+                                                                        <ImageBrush ImageSource="{x:Bind Id, Mode=OneWay,Converter={StaticResource AvatarIdToUrlConverter}}"/>
                                                                     </Ellipse.Fill>
                                                                 </Ellipse>
                                                                 <Ellipse Stroke="Black" StrokeThickness="1" RelativePanel.AlignRightWith="UserAvatarElipse" RelativePanel.AlignVerticalCenterWith="UserAvatarElipse" Fill="{x:Bind Status,Converter={StaticResource StatusToColorConverter}}" Width="8" Height="8" Margin="0,20,0,0"/>
@@ -240,7 +240,7 @@
                                                             </RelativePanel>
                                                         </DataTemplate>
                                                     </ListView.ItemTemplate>
-                                                </ListView>-->
+                                                </ListView>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
