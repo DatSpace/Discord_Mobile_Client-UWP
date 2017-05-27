@@ -262,15 +262,15 @@ namespace Discord_Mobile.ViewModels
             HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
-            SetUsersList(null,null);
+            SetUsersList(null, null);
             LoadingPopUpIsOpen = false;
         }
 
         private ObservableCollection<SocketRole> GetOrderedRoles(IReadOnlyCollection<SocketRole> roles)
         {
-            ObservableCollection<SocketRole> temp = new ObservableCollection<SocketRole>(roles.OrderByDescending(p => p.Position));
+            ObservableCollection<SocketRole> tempRoles = new ObservableCollection<SocketRole>(roles.OrderByDescending(p => p.Position));
             GuildRoles.Clear();
-            foreach (SocketRole j in temp)
+            foreach (SocketRole j in tempRoles)
             {
                 bool atLeastOne = false;
                 foreach (var user in GuildUserList)
@@ -279,10 +279,12 @@ namespace Discord_Mobile.ViewModels
                     int i = tempSortedUserRoles.Count;
                     while (i > 0 && !tempSortedUserRoles.First().IsHoisted)
                     {
-                        tempSortedUserRoles.RemoveAt(0);
+                        if (!tempSortedUserRoles.First().IsEveryone)
+                            tempSortedUserRoles.RemoveAt(0);
                         i--;
                     }
-                    if (i != 0 && tempSortedUserRoles.First().Name == j.Name)
+                    if (tempSortedUserRoles.First().Name == j.Name.ToString() || (tempSortedUserRoles.First().IsEveryone && j.Name.ToString() == "@everyone"))
+                    //if (i != 0 && tempSortedUserRoles.First().Name == j.Name)
                     {
                         atLeastOne = true;
                         break;

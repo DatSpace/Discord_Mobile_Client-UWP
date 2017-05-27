@@ -42,11 +42,42 @@ namespace Discord_Mobile.Converters
         }
     }
 
+    public class IdToNicknameOrUsernameConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            string name = "";
+            foreach (var user in ChatViewModel.GuildUserList)
+            {
+                if (user.Id == (ulong)value)
+                {
+                    if (user.Nickname != null)
+                        name = user.Nickname;
+                    else
+                        name = user.Username;
+                }
+            }
+
+            if (name.Length >= 18)
+            {
+                name = string.Format(name.Substring(0, 17) + "...");
+            }
+
+            return name;
+
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class UserToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Discord.Color userColor = new Discord.Color(255,255,255);
+            Discord.Color userColor = new Discord.Color(255, 255, 255);
 
             if (value.GetType() == typeof(SocketGuildUser))
             {
@@ -57,8 +88,8 @@ namespace Discord_Mobile.Converters
                 userColor = ((IEnumerable<SocketRole>)value).OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? userColor;
             }
 
-            SolidColorBrush color = new SolidColorBrush(Windows.UI.Color.FromArgb(255,userColor.R, userColor.G, userColor.B));
-            
+            SolidColorBrush color = new SolidColorBrush(Windows.UI.Color.FromArgb(255, userColor.R, userColor.G, userColor.B));
+
             return color;
         }
 
@@ -107,11 +138,10 @@ namespace Discord_Mobile.Converters
                     int i = tempSortedUserRoles.Count;
                     if (user.GetType() == typeof(SocketGuildUser))
                     {
-                        //UserRoleName = user.Roles.OrderByDescending(x => x.Position).First().Name;
-                        
                         while (i > 0 && !tempSortedUserRoles.First().IsHoisted)
                         {
-                            tempSortedUserRoles.RemoveAt(0);
+                            if (!tempSortedUserRoles.First().IsEveryone)
+                                tempSortedUserRoles.RemoveAt(0);
                             i--;
                         }
                     }
@@ -119,8 +149,7 @@ namespace Discord_Mobile.Converters
                     //{
                     //    UserRoleName = ((IEnumerable<SocketRole>)user).OrderByDescending(x => x.Position).First().Name;
                     //}
-
-                    if (user.Username != null && user.Status != UserStatus.Offline && i != 0 && tempSortedUserRoles.First().Name == value.ToString())
+                    if (tempSortedUserRoles.First().Name == value.ToString() || (tempSortedUserRoles.First().IsEveryone && value.ToString() == "@everyone"))
                         FilteredUsers.Add(user);
                 }
                 return FilteredUsers;
