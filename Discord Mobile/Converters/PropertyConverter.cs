@@ -102,17 +102,25 @@ namespace Discord_Mobile.Converters
                 Collection<SocketGuildUser> FilteredUsers = new Collection<SocketGuildUser>();
                 foreach (var user in ChatViewModel.GuildUserList)
                 {
-                    string UserRoleName = null;
+                    //string UserRoleName = null;
+                    List<SocketRole> tempSortedUserRoles = user.Roles.OrderByDescending(x => x.Position).ToList();
+                    int i = tempSortedUserRoles.Count;
                     if (user.GetType() == typeof(SocketGuildUser))
                     {
-                        UserRoleName = user.Roles.OrderByDescending(x => x.Position).First().Name;
+                        //UserRoleName = user.Roles.OrderByDescending(x => x.Position).First().Name;
+                        
+                        while (i > 0 && !tempSortedUserRoles.First().IsHoisted)
+                        {
+                            tempSortedUserRoles.RemoveAt(0);
+                            i--;
+                        }
                     }
-                    else if (user.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
-                    {
-                        UserRoleName = ((IEnumerable<SocketRole>)user).OrderByDescending(x => x.Position).First().Name;
-                    }
+                    //else if (user.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
+                    //{
+                    //    UserRoleName = ((IEnumerable<SocketRole>)user).OrderByDescending(x => x.Position).First().Name;
+                    //}
 
-                    if (user.Username != null && user.Status != UserStatus.Offline && UserRoleName == value.ToString())
+                    if (user.Username != null && user.Status != UserStatus.Offline && i != 0 && tempSortedUserRoles.First().Name == value.ToString())
                         FilteredUsers.Add(user);
                 }
                 return FilteredUsers;

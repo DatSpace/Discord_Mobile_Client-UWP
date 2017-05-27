@@ -263,7 +263,6 @@ namespace Discord_Mobile.ViewModels
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
             SetUsersList(null,null);
-            GuildRoles = GetOrderedRoles(Guild.Roles);
             LoadingPopUpIsOpen = false;
         }
 
@@ -272,8 +271,27 @@ namespace Discord_Mobile.ViewModels
             ObservableCollection<SocketRole> temp = new ObservableCollection<SocketRole>(roles.OrderByDescending(p => p.Position));
             GuildRoles.Clear();
             foreach (SocketRole j in temp)
-                if (j.IsHoisted)
+            {
+                bool atLeastOne = false;
+                foreach (var user in GuildUserList)
+                {
+                    var tempSortedUserRoles = user.Roles.OrderByDescending(x => x.Position).ToList();
+                    int i = tempSortedUserRoles.Count;
+                    while (i > 0 && !tempSortedUserRoles.First().IsHoisted)
+                    {
+                        tempSortedUserRoles.RemoveAt(0);
+                        i--;
+                    }
+                    if (i != 0 && tempSortedUserRoles.First().Name == j.Name)
+                    {
+                        atLeastOne = true;
+                        break;
+                    }
+                }
+                if (atLeastOne == true)
                     GuildRoles.Add(j);
+            }
+
             return GuildRoles;
         }
 
@@ -291,6 +309,7 @@ namespace Discord_Mobile.ViewModels
                     if (guilduser.Username != null && guilduser.Status != UserStatus.Offline && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
                         GuildUserList.Add(guilduser);
                 }
+                GuildRoles = GetOrderedRoles(Guild.Roles);
             }
         }
 
