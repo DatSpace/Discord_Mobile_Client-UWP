@@ -85,7 +85,15 @@
                             </Grid.RowDefinitions>
 
                             <Border Background="#1e2124" BorderBrush="Gray" BorderThickness="0,0,0,1"/>
-                            <TextBlock Margin="5" TextAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind ChatViewModel.GuildSelectedText, Mode=OneWay}" Foreground="White" FontWeight="Bold" FontSize="14" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Margin="5" TextAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind ChatViewModel.GuildSelectedText, Mode=OneWay}" Foreground="White" FontWeight="Bold" FontSize="14" />
+                                <Button Visibility="{x:Bind ChatViewModel.GuildSettingsButtonVisibility, Mode=OneWay}" Click="{x:Bind ChatViewModel.GuildSettingsPopUpOpen}" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="14" Content="&#xE713;"/>
+                            </Grid>
 
                             <Border Grid.Row="1" Background="#2e3136"/>
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -388,11 +396,38 @@
             </Grid>
         </Popup>
 
+        <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.GuildSettingsPopUpOpenProperty,Mode=OneWay}">
+            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
+                <Border CornerRadius="5" Background="#1e2124"/>
+                <StackPanel Margin="10">
+                    <TextBlock HorizontalAlignment="Center" Text="Guild Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
+                    <Button Margin="0,20,0,0" Click="{x:Bind ChatViewModel.LeaveGuild}" HorizontalAlignment="Center" Foreground="White" Content="{x:Bind ChatViewModel.GuildSettingsLeaveDeleteText,Mode=OneWay}" />
+                    <!--<TextBox Margin="0,20,0,5" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>-->
+                    <!--<TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter your channel's prefered name!"/>-->
+
+                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                        <Button BorderThickness="0" Background="Transparent">
+                            <Border Background="#7289DA" CornerRadius="2">
+                                <TextBlock Margin="5" FontSize="16" Text="Save Changes"/>
+                            </Border>
+                        </Button>
+                        <Button Click="{x:Bind ChatViewModel.GuildSettingsPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
+                            <Border Background="IndianRed" CornerRadius="2">
+                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
+                            </Border>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Popup>
+
         <Border Grid.Row="2" Background="#99AAB5"/>
         <TextBox IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource PlaceholderConverter}}" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
         <Button IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Foreground="White" FontSize="24" Click="{x:Bind ChatViewModel.SendMessageToTextChannel}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
 
         <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}"/>
+
+        <!--<ContentDialog Title="Are you sure ?" SecondaryButtonText="Nope" PrimaryButtonText="I am sure"/>-->
 
     </Grid>
 </Page>

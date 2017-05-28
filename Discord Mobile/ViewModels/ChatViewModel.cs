@@ -68,16 +68,16 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
-            //LoginService.client.Log += Client_Log;
+            LoginService.client.Log += Client_Log;
         }
 
-        //private Task Client_Log(LogMessage arg)
-        //{
-        //    if (VoiceChannel != null && arg.Message == "Disconnected")
-        //        throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
-        //    else
-        //        return null;
-        //}
+        private Task Client_Log(LogMessage arg)
+        {
+            if (VoiceChannel != null && arg.Message == "Disconnected")
+                throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
+            else
+                return null;
+        }
 
         private async void UpdateUserTypingStatus()
         {
@@ -246,8 +246,44 @@ namespace Discord_Mobile.ViewModels
                         SoundPath = null;
                         SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
                     }
+
+                    NoChannelVisibility = Visibility.Collapsed;
+                    
                 });
             }
+        }
+
+        public void LeaveGuild(object sender, RoutedEventArgs e)
+        {
+            LoadingPopUpIsOpen = true;
+
+            if (GuildPermissions.Administrator)
+                Guild.DeleteAsync();
+            else
+                Guild.LeaveAsync();
+            GuildSettingsPopUpOpenProperty = false;
+            while (GuildUserList.Count > 0)
+                GuildUserList.RemoveAt(0);
+            GuildRoles = GetOrderedRoles(Guild.Roles);
+            while (TextChannelsList.Count > 0)
+                TextChannelsList.RemoveAt(0);
+            while (VoiceChannelsList.Count > 0)
+                VoiceChannelsList.RemoveAt(0);
+            while (MessageList.Count > 0)
+                MessageList.RemoveAt(0);
+            Guild = null;
+
+            TopMessage = "Discord Mobile Client";
+            NoChannelMessage = "No channel selected!";
+            NoChannelVisibility = Visibility.Visible;
+            NoGuildVisibility = Visibility.Visible;
+            GuildSelectedText = "Select Guild";
+
+            GuildSettingsButtonVisibility = Visibility.Collapsed;
+            HasModifyChannelPermission = Visibility.Collapsed;
+            HasSendMessagePermission = false;
+
+            LoadingPopUpIsOpen = false;
         }
 
         public void SelectGuild(object sender, ItemClickEventArgs e)
@@ -259,6 +295,11 @@ namespace Discord_Mobile.ViewModels
             GuildChannelsList = Guild.Channels;
             GuildPermissions = Guild.CurrentUser.GuildPermissions;
             SetChannels();
+            GuildSettingsButtonVisibility = Visibility.Visible;
+            if (GuildPermissions.Administrator)
+                GuildSettingsLeaveDeleteText = String.Format("Delete \"" + Guild.Name + "\"");
+            else
+                GuildSettingsLeaveDeleteText = String.Format("Leave \"" + Guild.Name + "\"");
             HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
@@ -284,7 +325,6 @@ namespace Discord_Mobile.ViewModels
                         i--;
                     }
                     if (tempSortedUserRoles.First().Name == j.Name.ToString() || (tempSortedUserRoles.First().IsEveryone && j.Name.ToString() == "@everyone"))
-                    //if (i != 0 && tempSortedUserRoles.First().Name == j.Name)
                     {
                         atLeastOne = true;
                         break;
@@ -370,10 +410,11 @@ namespace Discord_Mobile.ViewModels
             {
                 HasSendMessagePermission = true;
             }
+            NoChannelVisibility = Visibility.Visible;
             if (MessageList.Count > 0)
                 NoChannelVisibility = Visibility.Collapsed;
             else
-                NoChannelMessage = "No Messages Yet :/";
+                NoChannelMessage = "No Messages...";
             LoadingPopUpIsOpen = false;
         }
 
@@ -473,6 +514,17 @@ namespace Discord_Mobile.ViewModels
             CreateChannelPopUpOpenProperty = true;
         }
 
+        public void GuildSettingsPopUpOpen(object sender, RoutedEventArgs e)
+        {
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            GuildSettingsPopUpOpenProperty = true;
+        }
+
+        public void GuildSettingsPopUpCancel(object sender, RoutedEventArgs e)
+        {
+            GuildSettingsPopUpOpenProperty = false;
+        }
+
         public void CreateChannelPopUpCancel(object sender, RoutedEventArgs e)
         {
 
@@ -494,22 +546,6 @@ namespace Discord_Mobile.ViewModels
         //######################################################################
 
         public ObservableCollection<SocketRole> GuildRoles = new ObservableCollection<SocketRole>();
-
-        //public IReadOnlyCollection<SocketRole> GuildRoles
-        //{
-        //    get
-        //    {
-        //        return guildRoles;
-        //    }
-        //    set
-        //    {
-        //        if (value != guildRoles)
-        //        {
-        //            guildRoles = value;
-        //            NotifyPropertyChanged("GuildRoles");
-        //        }
-        //    }
-        //}
 
         private string searchUserText = "";
 
@@ -543,6 +579,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     loadingPopUpIsOpen = value;
                     NotifyPropertyChanged("LoadingPopUpIsOpen");
+                }
+            }
+        }
+
+        private Visibility guildSettingsButtonVisibility = Visibility.Collapsed;
+
+        public Visibility GuildSettingsButtonVisibility
+        {
+            get
+            {
+                return guildSettingsButtonVisibility;
+            }
+            set
+            {
+                if (value != guildSettingsButtonVisibility)
+                {
+                    guildSettingsButtonVisibility = value;
+                    NotifyPropertyChanged("GuildSettingsButtonVisibility");
                 }
             }
         }
@@ -597,6 +651,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     settingsPopUpOpenProperty = value;
                     NotifyPropertyChanged("SettingsPopUpOpenProperty");
+                }
+            }
+        }
+
+        private string guildSettingsLeaveDeleteText = "Leave Guild";
+
+        public string GuildSettingsLeaveDeleteText
+        {
+            get
+            {
+                return guildSettingsLeaveDeleteText;
+            }
+            set
+            {
+                if (value != guildSettingsLeaveDeleteText)
+                {
+                    guildSettingsLeaveDeleteText = value;
+                    NotifyPropertyChanged("GuildSettingsLeaveDeleteText");
                 }
             }
         }
@@ -705,6 +777,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     screenVerticalCenter = value;
                     NotifyPropertyChanged("ScreenVerticalCenter");
+                }
+            }
+        }
+
+        private bool guildSettingsPopUpOpenProperty = false;
+
+        public bool GuildSettingsPopUpOpenProperty
+        {
+            get
+            {
+                return guildSettingsPopUpOpenProperty;
+            }
+            set
+            {
+                if (value != guildSettingsPopUpOpenProperty)
+                {
+                    guildSettingsPopUpOpenProperty = value;
+                    NotifyPropertyChanged("GuildSettingsPopUpOpenProperty");
                 }
             }
         }
