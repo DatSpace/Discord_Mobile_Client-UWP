@@ -23,7 +23,7 @@ namespace Discord_Mobile.ViewModels
         private int NumOfMessages = 30;
         public event PropertyChangedEventHandler PropertyChanged;
         private Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-        private SocketGuild Guild;
+        public static SocketGuild Guild;
         private static SocketTextChannel TextChannel;
         public static SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTyping = new Collection<UsersTyping>();
@@ -241,6 +241,7 @@ namespace Discord_Mobile.ViewModels
                         }
                     }
                     MessageList.Add(arg);
+                    MessageListCopy.Add(arg);
                     if ((bool)localSettings.Values["Enable_Sounds"])
                     {
                         SoundPath = null;
@@ -400,9 +401,11 @@ namespace Discord_Mobile.ViewModels
             NumOfMessages = 30;
             IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
             MessageList.Clear();
+            MessageListCopy.Clear();
             foreach (var item in tempMessageList)
             {
                 MessageList.Insert(0, item);
+                MessageListCopy.Insert(0, item);
             }
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             TopMessage = TextChannel.Name;
@@ -422,12 +425,13 @@ namespace Discord_Mobile.ViewModels
         {
             NumOfMessages += 30;
             IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
-            foreach (IMessage item in tempMessageList)
+            foreach (IMessage message in tempMessageList)
             {
                 //Compare the unique message id's, otherwise it's not working!
-                if (!MessageList.Any(x => x.Id == item.Id))
+                if (!MessageList.Any(x => x.Id == message.Id))
                 {
-                    MessageList.Insert(0, item);
+                    MessageList.Insert(0, message);
+                    MessageListCopy.Insert(0, message);
                 }
             }
         }
@@ -1080,6 +1084,7 @@ namespace Discord_Mobile.ViewModels
         }
 
         public ObservableCollection<IMessage> MessageList = new ObservableCollection<IMessage>();
+        public static Collection<IMessage> MessageListCopy = new Collection<IMessage>();
 
         private bool channelsSplitViewPaneOpen = false;
 

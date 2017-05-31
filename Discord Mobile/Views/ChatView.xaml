@@ -26,6 +26,7 @@
         <!--<conv:DiscordColorToColorConverter x:Key="DiscordColorToColorConverter"/>-->
         <conv:RoleNameToRoleUsersConverter x:Key="RoleNameToRoleUsersConverter"/>
         <conv:IdToNicknameOrUsernameConverter x:Key="IdToNicknameOrUsernameConverter"/>
+        <conv:MessageMentionsConverter x:Key="MessageMentionsConverter"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
     </Page.Resources>
@@ -207,7 +208,8 @@
                                             <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="10"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="1" TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
+                                        <TextBlock Grid.Row="1" TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content,Converter={StaticResource MessageMentionsConverter}, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
+                                        <!--<Image Grid.Row="1" Source="{x:Bind Attachments}"/>-->
                                     </Grid>
                                 </Grid>
                             </DataTemplate>
