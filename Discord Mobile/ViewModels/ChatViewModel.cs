@@ -505,6 +505,7 @@ namespace Discord_Mobile.ViewModels
             if (NewChannelName != "" && Guild != null)
             {
                 LoadingPopUpIsOpen = true;
+                NewChannelName = NewChannelName.Replace(" ", "_");
                 Guild.CreateTextChannelAsync(NewChannelName);
                 CreateChannelPopUpOpenProperty = false;
                 NewChannelName = "";
