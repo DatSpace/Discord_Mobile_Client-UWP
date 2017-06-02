@@ -42,6 +42,70 @@ namespace Discord_Mobile.Converters
         }
     }
 
+    class AuthorToNameConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null)
+            {
+                string usernickname = "";
+
+                if (value is RestUser)
+                    usernickname = ((RestUser)value).Username;
+                else if (value is SocketSelfUser)
+                {
+                    usernickname = ((SocketSelfUser)value).Username;
+                }
+                else
+                {
+                    usernickname = ((SocketGuildUser)value).Nickname;
+                    if (usernickname == null)
+                    {
+                        usernickname = ((SocketGuildUser)value).Username;
+                    }
+                }
+
+                return usernickname;
+            }
+            else
+                return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RecipientToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            SolidColorBrush color;
+            switch (((IUser)value).Status)
+            {
+                case UserStatus.Online:
+                    color = new SolidColorBrush(Colors.SpringGreen);
+                    break;
+                case UserStatus.Idle:
+                    color = new SolidColorBrush(Colors.Orange);
+                    break;
+                case UserStatus.DoNotDisturb:
+                    color = new SolidColorBrush(Colors.Red);
+                    break;
+                default:
+                    color = new SolidColorBrush(Colors.Black);
+                    break;
+            }
+            return color;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class IdToNicknameOrUsernameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -83,7 +147,7 @@ namespace Discord_Mobile.Converters
             {
                 userColor = ((SocketGuildUser)value).Roles.OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? userColor;
             }
-            else if (value.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
+            else if (value.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser) && value.GetType() != typeof(SocketSelfUser))
             {
                 userColor = ((IEnumerable<SocketRole>)value).OrderByDescending(x => x.Position).FirstOrDefault(x => x.Color.RawValue != Discord.Color.Default.RawValue)?.Color ?? userColor;
             }
@@ -109,8 +173,10 @@ namespace Discord_Mobile.Converters
                 string url;
                 if (value.GetType() == typeof(SocketGuildUser))
                     url = ((SocketGuildUser)value).GetAvatarUrl();
-                else
+                else if (value.GetType() == typeof(RestUser))
                     url = ((RestUser)value).GetAvatarUrl();
+                else
+                    url = ((SocketSelfUser)value).GetAvatarUrl();
 
                 if (url != null)
                     image = new BitmapImage(new Uri(url));
@@ -205,4 +271,17 @@ namespace Discord_Mobile.Converters
     //        throw new NotImplementedException();
     //    }
     //}
+
+    public class RecipientToUsernameConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return ((IUser)value).Username;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -28,37 +28,6 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    class UserNameToNicknameConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            if (value != null)
-            {
-                string usernickname;
-
-                if (value is RestUser)
-                    usernickname = ((RestUser)value).Username;
-                else
-                {
-                    usernickname = ((SocketGuildUser)value).Nickname;
-                    if (usernickname == null || usernickname == "")
-                    {
-                        int temp = value.ToString().LastIndexOf('#');
-                        return value.ToString().Substring(0, temp);
-                    }
-                }
-                return usernickname;
-            }
-            else
-                return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     //class UserTypingConverter : IValueConverter
     //{
     //    public object Convert(object value, Type targetType, object parameter, string language)

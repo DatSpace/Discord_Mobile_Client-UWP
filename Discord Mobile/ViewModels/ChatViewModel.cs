@@ -30,6 +30,8 @@ namespace Discord_Mobile.ViewModels
         private static SocketSelfUser User;
         private GuildPermissions GuildPermissions;
         private ChannelPermissions TextChannelPermissions;
+        private IEnumerable<SocketDMChannel> DMChannels;
+        public SocketDMChannel DMChannel;
         //private ChannelPermissions VoiceChannelPermissions;
 
 
@@ -64,7 +66,7 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.LeftGuild += Joined_Guild;
             LoginService.client.JoinedGuild += Joined_Guild;
             LoginService.client.ChannelCreated += Channel_Created;
-            LoginService.client.ChannelDestroyed += Channel_Created;
+            LoginService.client.ChannelDestroyed += Channel_Destroyed;
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
@@ -185,7 +187,20 @@ namespace Discord_Mobile.ViewModels
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                SetChannels();
+                if (arg.GetType() == typeof(SocketDMChannel))
+                    DMChannelsList.Add((IDMChannel)arg);
+                else
+                    SetChannels();
+            });
+        }
+        private async Task Channel_Destroyed(SocketChannel arg)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (arg.GetType() == typeof(SocketDMChannel))
+                    DMChannelsList.Remove((IDMChannel)arg);
+                else
+                    SetChannels();
             });
         }
 
@@ -229,7 +244,7 @@ namespace Discord_Mobile.ViewModels
 
         private async Task Message_Received(SocketMessage arg)
         {
-            if (arg.Channel == TextChannel)
+            if (arg.Channel == DMChannel || arg.Channel == TextChannel)
             {
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -254,6 +269,28 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
+        private void ClearGuild()
+        {
+            if (Guild != null)
+            {
+                while (GuildUserList.Count > 0)
+                    GuildUserList.RemoveAt(0);
+                GuildRoles = GetOrderedRoles(Guild.Roles);
+                while (TextChannelsList.Count > 0)
+                    TextChannelsList.RemoveAt(0);
+                while (VoiceChannelsList.Count > 0)
+                    VoiceChannelsList.RemoveAt(0);
+                while (MessageList.Count > 0)
+                    MessageList.RemoveAt(0);
+                Guild = null;
+                TextChannel = null;
+                VoiceChannel = null;
+                GuildSettingsButtonVisibility = Visibility.Collapsed;
+                HasSendMessagePermission = false;
+                TopMessage = "Discord Mobile Client";
+            }
+        }
+
         public void LeaveGuild(object sender, RoutedEventArgs e)
         {
             LoadingPopUpIsOpen = true;
@@ -263,18 +300,9 @@ namespace Discord_Mobile.ViewModels
             else
                 Guild.LeaveAsync();
             GuildSettingsPopUpOpenProperty = false;
-            while (GuildUserList.Count > 0)
-                GuildUserList.RemoveAt(0);
-            GuildRoles = GetOrderedRoles(Guild.Roles);
-            while (TextChannelsList.Count > 0)
-                TextChannelsList.RemoveAt(0);
-            while (VoiceChannelsList.Count > 0)
-                VoiceChannelsList.RemoveAt(0);
-            while (MessageList.Count > 0)
-                MessageList.RemoveAt(0);
-            Guild = null;
 
-            TopMessage = "Discord Mobile Client";
+            ClearGuild();
+
             NoChannelMessage = "No channel selected!";
             NoChannelVisibility = Visibility.Visible;
             NoGuildVisibility = Visibility.Visible;
@@ -302,6 +330,8 @@ namespace Discord_Mobile.ViewModels
             else
                 GuildSettingsLeaveDeleteText = String.Format("Leave \"" + Guild.Name + "\"");
             HasModifyChannelPermission = Visibility.Collapsed;
+            ChannelsVisibility = Visibility.Visible;
+            PrivateMessagesVisibility = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
             SetUsersList(null, null);
@@ -453,11 +483,54 @@ namespace Discord_Mobile.ViewModels
             SettingsPopUpOpenProperty = true;
         }
 
-        public async Task SendMessageToTextChannel()
+        public async Task SendMessage()
         {
             LoadingPopUpIsOpen = true;
-            await TextChannel?.SendMessageAsync(Message);
+            if (TextChannel != null)
+                await TextChannel.SendMessageAsync(Message);
+            else
+                await DMChannel.SendMessageAsync(Message);
             Message = "";
+            LoadingPopUpIsOpen = false;
+        }
+
+        public void ShowPrivateMessages()
+        {
+            LoadingPopUpIsOpen = true;
+
+            ChannelsVisibility = Visibility.Collapsed;
+            GuildSelectedText = "Private Messages";
+            ClearGuild();
+            
+            DMChannels = LoginService.client.DMChannels;
+            DMChannelsList.Clear();
+            foreach (var dmchannel in DMChannels)
+                DMChannelsList.Add(dmchannel);
+            PrivateMessagesVisibility = Visibility.Visible;
+            LoadingPopUpIsOpen = false;
+        }
+
+        public async Task SelectDMChannel(object sender, ItemClickEventArgs e)
+        {
+            LoadingPopUpIsOpen = true;
+            DMChannel = (SocketDMChannel)e.ClickedItem;
+            HasSendMessagePermission = true;
+            NumOfMessages = 30;
+            IEnumerable<IMessage> tempMessageList = await DMChannel.GetMessagesAsync(NumOfMessages).Flatten();
+            MessageList.Clear();
+            MessageListCopy.Clear();
+            foreach (var item in tempMessageList)
+            {
+                MessageList.Insert(0, item);
+                MessageListCopy.Insert(0, item);
+            }
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
+            TopMessage = DMChannel.Recipient.Username;
+            NoChannelVisibility = Visibility.Visible;
+            if (MessageList.Count > 0)
+                NoChannelVisibility = Visibility.Collapsed;
+            else
+                NoChannelMessage = "No Messages...";
             LoadingPopUpIsOpen = false;
         }
 
@@ -550,6 +623,8 @@ namespace Discord_Mobile.ViewModels
 
         //######################################################################
 
+        public ObservableCollection<IDMChannel> DMChannelsList = new ObservableCollection<IDMChannel>();
+
         public ObservableCollection<SocketRole> GuildRoles = new ObservableCollection<SocketRole>();
 
         private string searchUserText = "";
@@ -602,6 +677,42 @@ namespace Discord_Mobile.ViewModels
                 {
                     guildSettingsButtonVisibility = value;
                     NotifyPropertyChanged("GuildSettingsButtonVisibility");
+                }
+            }
+        }
+
+        private Visibility privateMessagesVisibility = Visibility.Collapsed;
+
+        public Visibility PrivateMessagesVisibility
+        {
+            get
+            {
+                return privateMessagesVisibility;
+            }
+            set
+            {
+                if (value != privateMessagesVisibility)
+                {
+                    privateMessagesVisibility = value;
+                    NotifyPropertyChanged("PrivateMessagesVisibility");
+                }
+            }
+        }
+
+        private Visibility channelsVisibility = Visibility.Visible;
+
+        public Visibility ChannelsVisibility
+        {
+            get
+            {
+                return channelsVisibility;
+            }
+            set
+            {
+                if (value != channelsVisibility)
+                {
+                    channelsVisibility = value;
+                    NotifyPropertyChanged("ChannelsVisibility");
                 }
             }
         }
