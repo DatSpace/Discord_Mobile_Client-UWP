@@ -14,6 +14,7 @@ using Discord_Mobile.Models;
 using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
+using System.IO;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -32,8 +33,11 @@ namespace Discord_Mobile.ViewModels
         private ChannelPermissions TextChannelPermissions;
         private IEnumerable<SocketDMChannel> DMChannels;
         public SocketDMChannel DMChannel;
-        //private ChannelPermissions VoiceChannelPermissions;
+        Windows.Storage.Pickers.FileOpenPicker FilePicker = new Windows.Storage.Pickers.FileOpenPicker();
+        Stream PickedFileStream;
+        public static Windows.Storage.StorageFile PickedFile;
 
+        //private ChannelPermissions VoiceChannelPermissions;
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
@@ -70,50 +74,51 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += User_Joined;
             LoginService.client.UserLeft += User_Joined;
             LoginService.client.UserIsTyping += User_Typing;
-            LoginService.client.Log += Client_Log;
+            //LoginService.client.Log += Client_Log;
+
+            FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            FilePicker.FileTypeFilter.Add("*");
+            FilePicker.CommitButtonText = "Send File";
         }
 
         private Task Client_Log(LogMessage arg)
         {
-            if (VoiceChannel != null && arg.Message == "Disconnected")
-                throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
-            else
-                return null;
+            throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
         }
 
         private async void UpdateUserTypingStatus()
         {
-            if (TextChannel != null && UsersTyping != null)
-            {
-                for (int i = 0; i < UsersTyping.Count; i++)
+                if (TextChannel != null && UsersTyping != null && PickedFile == null)
                 {
-                    if (UsersTyping[i].ToBeDeleted())
+                    for (int i = 0; i < UsersTyping.Count; i++)
                     {
-                        UsersTyping.Remove(UsersTyping[i]);
+                        if (UsersTyping[i].ToBeDeleted())
+                        {
+                            UsersTyping.Remove(UsersTyping[i]);
+                        }
                     }
-                }
 
-                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    Users_Typing = "";
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        Users_Typing = "";
 
-                    if (UsersTyping.Count >= 3)
-                    {
-                        Users_Typing_Visibility = true;
-                        Users_Typing = "Several users are typing...";
-                    }
-                    else if (UsersTyping.Count == 2)
-                    {
-                        Users_Typing_Visibility = true;
-                        Users_Typing = UsersTyping[0].Username + ", " + UsersTyping[1] + " are typing...";
-                    }
-                    else if (UsersTyping.Count == 1)
-                    {
-                        Users_Typing_Visibility = true;
-                        Users_Typing = UsersTyping[0].Username + " is typing...";
-                    }
-                    else
-                        Users_Typing_Visibility = false;
+                        if (UsersTyping.Count >= 3)
+                        {
+                            Users_Typing_Visibility = true;
+                            Users_Typing = "Several users are typing...";
+                        }
+                        else if (UsersTyping.Count == 2)
+                        {
+                            Users_Typing_Visibility = true;
+                            Users_Typing = UsersTyping[0].Username + ", " + UsersTyping[1] + " are typing...";
+                        }
+                        else if (UsersTyping.Count == 1)
+                        {
+                            Users_Typing_Visibility = true;
+                            Users_Typing = UsersTyping[0].Username + " is typing...";
+                        }
+                        else
+                            Users_Typing_Visibility = false;
 
                     //foreach (var typinguser in UsersTyping)
                     //{
@@ -130,7 +135,7 @@ namespace Discord_Mobile.ViewModels
                     //else
                     //    Users_Typing_Visibility = true;
                 });
-            }
+                }
         }
 
         private async Task User_Typing(SocketUser arg1, ISocketMessageChannel arg2)
@@ -264,7 +269,7 @@ namespace Discord_Mobile.ViewModels
                     }
 
                     NoChannelVisibility = Visibility.Collapsed;
-                    
+
                 });
             }
         }
@@ -427,6 +432,7 @@ namespace Discord_Mobile.ViewModels
             LoadingPopUpIsOpen = true;
             TextChannel = (SocketTextChannel)e.ClickedItem;
             HasSendMessagePermission = false;
+            HasSendFilePermission = false;
             TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
             NumOfMessages = 30;
             IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
@@ -440,9 +446,9 @@ namespace Discord_Mobile.ViewModels
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             TopMessage = TextChannel.Name;
             if (TextChannelPermissions.SendMessages)
-            {
                 HasSendMessagePermission = true;
-            }
+            if (TextChannelPermissions.AttachFiles)
+                HasSendFilePermission = true;
             NoChannelVisibility = Visibility.Visible;
             if (MessageList.Count > 0)
                 NoChannelVisibility = Visibility.Collapsed;
@@ -486,11 +492,61 @@ namespace Discord_Mobile.ViewModels
         public async Task SendMessage()
         {
             LoadingPopUpIsOpen = true;
-            if (TextChannel != null)
-                await TextChannel.SendMessageAsync(Message);
+
+            if (PickedFile != null)
+            {
+                if (TextChannel != null)
+                    await TextChannel.SendFileAsync(PickedFileStream, PickedFile.Name, Message);
+                else
+                    await DMChannel.SendFileAsync(PickedFileStream, PickedFile.Name, Message);
+                Message = "";
+                PickedFile = null;
+                PickedFileStream = null;
+                AttachmentColorString = "White";
+                AttachmentIconString = "\uE898";
+                AttachmentPathString = "";
+                NotifyPropertyChanged("TopMessage");
+            }
+            else if (Message.Trim() != "")
+            {
+                if (TextChannel != null)
+                    await TextChannel.SendMessageAsync(Message);
+                else
+                    await DMChannel.SendMessageAsync(Message);
+                Message = "";
+            }
+
+            LoadingPopUpIsOpen = false;
+        }
+
+        public async Task SelectFile()
+        {
+            LoadingPopUpIsOpen = true;
+
+            if (PickedFile == null)
+            {
+                PickedFile = await FilePicker.PickSingleFileAsync();
+                if (PickedFile != null)
+                {
+                    PickedFileStream = await PickedFile.OpenStreamForReadAsync();
+                    AttachmentColorString = "DarkRed";
+                    AttachmentIconString = "\uE74D";
+                    AttachmentPathString = string.Format("File Attached: " + PickedFile.Path);
+                    NotifyPropertyChanged("TopMessage");
+                    
+                }
+
+            }
             else
-                await DMChannel.SendMessageAsync(Message);
-            Message = "";
+            {
+                PickedFile = null;
+                PickedFileStream = null;
+                AttachmentColorString = "White";
+                AttachmentIconString = "\uE898";
+                AttachmentPathString = "";
+            }
+
+
             LoadingPopUpIsOpen = false;
         }
 
@@ -501,7 +557,7 @@ namespace Discord_Mobile.ViewModels
             ChannelsVisibility = Visibility.Collapsed;
             GuildSelectedText = "Private Messages";
             ClearGuild();
-            
+
             DMChannels = LoginService.client.DMChannels;
             DMChannelsList.Clear();
             foreach (var dmchannel in DMChannels)
@@ -622,6 +678,61 @@ namespace Discord_Mobile.ViewModels
         }
 
         //######################################################################
+
+        private string attachmentPathString = "";
+
+        public string AttachmentPathString
+        {
+            get
+            {
+                return attachmentPathString;
+            }
+            set
+            {
+                if (value != attachmentPathString)
+                {
+                    attachmentPathString = value;
+                    NotifyPropertyChanged("AttachmentPathString");
+                }
+            }
+        }
+
+        private string attachmentColorString = "White";
+
+        public string AttachmentColorString
+        {
+            get
+            {
+                return attachmentColorString;
+            }
+            set
+            {
+                if (value != attachmentColorString)
+                {
+                    attachmentColorString = value;
+                    NotifyPropertyChanged("AttachmentColorString");
+                }
+            }
+        }
+
+        private string attachmentIconString = "\uE898";
+
+        public string AttachmentIconString
+        {
+            get
+            {
+                return attachmentIconString;
+            }
+            set
+            {
+                if (value != attachmentIconString)
+                {
+                    attachmentIconString = value;
+                    NotifyPropertyChanged("AttachmentIconString");
+                }
+            }
+        }
+
 
         public ObservableCollection<IDMChannel> DMChannelsList = new ObservableCollection<IDMChannel>();
 
@@ -749,6 +860,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     hasSendMessagePermission = value;
                     NotifyPropertyChanged("HasSendMessagePermission");
+                }
+            }
+        }
+
+        private bool hasSendFilePermission = false;
+
+        public bool HasSendFilePermission
+        {
+            get
+            {
+                return hasSendFilePermission;
+            }
+            set
+            {
+                if (value != hasSendFilePermission)
+                {
+                    hasSendFilePermission = value;
+                    NotifyPropertyChanged("HasSendFilePermission");
                 }
             }
         }

@@ -248,6 +248,7 @@
                         <Image Height="10" Width="10" Source="/Assets/typing.gif" Margin="10,0,0,0"/>
                         <TextBlock Margin="5,0,0,0" FontSize="12" Text="{x:Bind ChatViewModel.Users_Typing,Mode=OneWay}" Foreground="#99AAB5"/>
                     </StackPanel>
+                    <TextBlock Margin="5,0,0,5" FontSize="12" Text="{x:Bind ChatViewModel.AttachmentPathString,Mode=OneWay}" Foreground="#99AAB5" VerticalAlignment="Bottom"/>
 
                     <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="160">
                         <SplitView.Pane>
@@ -288,7 +289,6 @@
                             </Grid>
                         </SplitView.Pane>
                     </SplitView>
-
                 </Grid>
             </SplitView.Content>
         </SplitView>
@@ -453,7 +453,8 @@
         </Popup>
 
         <Border Grid.Row="2" Background="#99AAB5"/>
-        <TextBox IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Margin="0,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource PlaceholderConverter}}" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
+        <Button IsEnabled="{x:Bind ChatViewModel.HasSendFilePermission,Mode=OneWay}" Grid.Row="2" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Left" Foreground="{x:Bind ChatViewModel.AttachmentColorString,Mode=OneWay}" FontSize="24" Click="{x:Bind ChatViewModel.SelectFile}" Content="{x:Bind ChatViewModel.AttachmentIconString,Mode=OneWay}" FontFamily="Segoe MDL2 Assets"/>
+        <TextBox IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Margin="40,0,40,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" PlaceholderText="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource PlaceholderConverter}}" Text="{x:Bind ChatViewModel.Message, Mode=TwoWay}" Background="Transparent" Foreground="#99AAB5"/>
         <Button IsEnabled="{x:Bind ChatViewModel.HasSendMessagePermission,Mode=OneWay}" Grid.Row="2" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Foreground="White" FontSize="24" Click="{x:Bind ChatViewModel.SendMessage}" Content="&#xE122;" FontFamily="Segoe MDL2 Assets"/>
 
         <MediaElement Source="{x:Bind ChatViewModel.SoundPath, Mode=OneWay}"/>

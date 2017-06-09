@@ -87,14 +87,19 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value != null)
+            if (value.ToString() == "Discord Mobile Client")
             {
-                return string.Format("Message #" + value.ToString());
+                return "Please select a channel...";
+            }
+            else if (ChatViewModel.PickedFile != null)
+            {
+                return "Add a comment! (Optional)";
             }
             else
             {
-                return value;
+                return string.Format("Message #" + value.ToString());
             }
+
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

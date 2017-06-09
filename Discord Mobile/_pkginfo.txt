@@ -1,1 +1,1 @@
-C:\Users\konka\Desktop\Coding\Universal Windows Platform\Discord Mobile Client\Discord Mobile\AppPackages\Discord Mobile Client_0.3.0.0\Discord Mobile Client_0.3.0.0_arm.appxbundle
+C:\Users\konka\Desktop\Coding\Universal Windows Platform\Discord_Mobile_Client\Discord Mobile\bin\ARM\Release\Upload\Discord Mobile Client_0.9.3.0\Discord Mobile Client_0.9.3.0_arm.appxbundle
