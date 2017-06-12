@@ -112,73 +112,78 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            string messageContent = (string)value;
-            foreach (IMessage message in ChatViewModel.MessageListCopy)
+            string messageContent = null;
+            if ((string)value != "")
             {
-                if (message.Content == (string)value)
+                messageContent = (string)value;
+                foreach (IMessage message in ChatViewModel.MessageListCopy)
                 {
-                    IReadOnlyCollection<ulong> MentionedUserIdList = message.MentionedUserIds;
-                    IReadOnlyCollection<ulong> MentionedRoleIdList = message.MentionedRoleIds;
-                    IReadOnlyCollection<ulong> MentionedChannelIdList = message.MentionedChannelIds;
-
-                    foreach (ulong mentioneduserid in MentionedUserIdList)
+                    if (message.Content == (string)value)
                     {
-                        if (((string)value).Contains("<@" + mentioneduserid.ToString() + ">"))
+                        IReadOnlyCollection<ulong> MentionedUserIdList = message.MentionedUserIds;
+                        IReadOnlyCollection<ulong> MentionedRoleIdList = message.MentionedRoleIds;
+                        IReadOnlyCollection<ulong> MentionedChannelIdList = message.MentionedChannelIds;
+
+                        foreach (ulong mentioneduserid in MentionedUserIdList)
                         {
-                            string usernameOrNickname = "";
-                            foreach (SocketGuildUser user in ChatViewModel.GuildUserList)
+                            if (((string)value).Contains("<@" + mentioneduserid.ToString() + ">"))
                             {
-                                if (user.Id == mentioneduserid)
+                                string usernameOrNickname = "";
+                                foreach (SocketGuildUser user in ChatViewModel.GuildUserList)
                                 {
-                                    if (user.Nickname != null)
-                                        usernameOrNickname = user.Nickname;
-                                    else
-                                        usernameOrNickname = user.Username;
-                                    break;
+                                    if (user.Id == mentioneduserid)
+                                    {
+                                        if (user.Nickname != null)
+                                            usernameOrNickname = user.Nickname;
+                                        else
+                                            usernameOrNickname = user.Username;
+                                        break;
+                                    }
+
                                 }
 
+                                messageContent = messageContent.Replace("<@" + mentioneduserid.ToString() + ">", "@" + usernameOrNickname);
                             }
-
-                            messageContent = messageContent.Replace("<@" + mentioneduserid.ToString() + ">", "@" + usernameOrNickname);
                         }
-                    }
-                    foreach (ulong mentionedroleid in MentionedRoleIdList)
-                    {
-                        if (((string)value).Contains("<@&" + mentionedroleid.ToString() + ">"))
+                        foreach (ulong mentionedroleid in MentionedRoleIdList)
                         {
-                            string rolename = "";
-                            foreach (var role in ChatViewModel.Guild.Roles)
+                            if (((string)value).Contains("<@&" + mentionedroleid.ToString() + ">"))
                             {
-                                if (role.Id == mentionedroleid)
+                                string rolename = "";
+                                foreach (var role in ChatViewModel.Guild.Roles)
                                 {
-                                    rolename = role.Name;
-                                    break;
+                                    if (role.Id == mentionedroleid)
+                                    {
+                                        rolename = role.Name;
+                                        break;
+                                    }
                                 }
-                            }
 
-                            messageContent = messageContent.Replace("<@&" + mentionedroleid.ToString() + ">", "@" + rolename);
+                                messageContent = messageContent.Replace("<@&" + mentionedroleid.ToString() + ">", "@" + rolename);
+                            }
                         }
-                    }
-                    foreach (ulong mentionedchannelid in MentionedChannelIdList)
-                    {
-                        if (((string)value).Contains("<#" + mentionedchannelid.ToString() + ">"))
+                        foreach (ulong mentionedchannelid in MentionedChannelIdList)
                         {
-                            string channelname = "";
-                            foreach (SocketGuildChannel channel in ChatViewModel.Guild.Channels)
+                            if (((string)value).Contains("<#" + mentionedchannelid.ToString() + ">"))
                             {
-                                if (channel.Id == mentionedchannelid)
+                                string channelname = "";
+                                foreach (SocketGuildChannel channel in ChatViewModel.Guild.Channels)
                                 {
-                                    channelname = channel.Name;
-                                    break;
+                                    if (channel.Id == mentionedchannelid)
+                                    {
+                                        channelname = channel.Name;
+                                        break;
+                                    }
                                 }
-                            }
 
-                            messageContent = messageContent.Replace("<#" + mentionedchannelid.ToString() + ">", "#" + channelname);
+                                messageContent = messageContent.Replace("<#" + mentionedchannelid.ToString() + ">", "#" + channelname);
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
+
             return messageContent;
         }
 

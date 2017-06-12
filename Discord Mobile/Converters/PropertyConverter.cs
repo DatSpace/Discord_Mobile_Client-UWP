@@ -10,6 +10,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Discord_Mobile.ViewModels;
+using Windows.UI.Xaml;
 
 namespace Discord_Mobile.Converters
 {
@@ -34,6 +35,123 @@ namespace Discord_Mobile.Converters
                     break;
             }
             return color;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FileNameExtentionToFileIconConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            BitmapImage image = null;
+
+            int lastIndex = ((string)value).LastIndexOf(".");
+            string fileExtention = ((string)value).Substring(lastIndex);
+
+            switch (fileExtention)
+            {
+                case ".pdf":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/pdf-24.ico"));
+                    break;
+                case ".csv":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/csv-24.ico"));
+                    break;
+                case ".txt":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/document-24.ico"));
+                    break;
+                case ".xls":
+                case ".xlt":
+                case ".xlm":
+                case ".xlsx":
+                case ".xlsm":
+                case ".xltx":
+                case ".xltm":
+                case ".xlsb":
+                case ".xla":
+                case ".xlam":
+                case ".xll":
+                case ".xlw":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/exel-24.ico"));
+                    break;
+                case ".ppt":
+                case ".pot":
+                case ".pps":
+                case ".pptx":
+                case ".pptm":
+                case ".potx":
+                case ".potm":
+                case ".ppam":
+                case ".ppsx":
+                case ".ppsm":
+                case ".sldx":
+                case ".sldm":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/powerpoint-3-24.ico"));
+                    break;
+                case ".doc":
+                case ".dot":
+                case ".wbk":
+                case ".docx":
+                case ".docm":
+                case ".dotx":
+                case ".dotm":
+                case ".docb":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/word-3-24.ico"));
+                    break;
+                case ".avi":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/avi-24.ico"));
+                    break;
+                case ".flv":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/flv-24.ico"));
+                    break;
+                case ".mov":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mov-24.ico"));
+                    break;
+                case ".mpg":
+                case ".mpeg":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mpg-24.ico"));
+                    break;
+                case ".dll":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/dll-24.ico"));
+                    break;
+                case ".exe":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/exe-24.ico"));
+                    break;
+                case ".psd":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/psd-24.ico"));
+                    break;
+                case ".gif":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/gif-24.ico"));
+                    break;
+                case ".jpg":
+                case ".jpeg":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/jpg-24.ico"));
+                    break;
+                case ".png":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/png-24.ico"));
+                    break;
+                case ".rar":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/rar-24.ico"));
+                    break;
+                case ".zip":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/zip-24.ico"));
+                    break;
+                case ".mp3":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mp3-24.ico"));
+                    break;
+                case ".wma":
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/wma-24.ico"));
+                    break;
+                default:
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/file-24.ico"));
+                    break;
+
+            }
+
+            return image;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -277,6 +395,38 @@ namespace Discord_Mobile.Converters
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             return ((IUser)value).Username;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MessageToMessageInfoVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (ChatViewModel.MessageListCopy.Count > 1)
+            {
+                for (int i = 0; i < ChatViewModel.MessageListCopy.Count; i++)
+                {
+                    if ((string)value == ChatViewModel.MessageListCopy[i].Content)
+                    {
+                        if (i > 0)
+                        {
+                            double timeDif = ChatViewModel.MessageListCopy[i].Timestamp.Subtract(ChatViewModel.MessageListCopy[i - 1].Timestamp).TotalMinutes;
+                            if ((ChatViewModel.MessageListCopy[i - 1].Author == ChatViewModel.MessageListCopy[i].Author) &&  timeDif < 20)
+                                return Visibility.Collapsed;
+                        }
+                        else
+                            return Visibility.Visible;
+                    }
+                }
+            }
+            else
+                return Visibility.Visible;
+            return Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

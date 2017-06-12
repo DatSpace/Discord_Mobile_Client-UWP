@@ -30,6 +30,8 @@
         <conv:RecipientToImageConverter x:Key="RecipientToImageConverter"/>
         <conv:RecipientToColorConverter x:Key="RecipientToColorConverter"/>
         <conv:RecipientToUsernameConverter x:Key="RecipientToUsernameConverter"/>
+        <conv:FileNameExtentionToFileIconConverter x:Key="FileNameExtentionToFileIconConverter"/>
+        <conv:MessageToMessageInfoVisibilityConverter x:Key="MessageToMessageInfoVisibilityConverter"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
     </Page.Resources>
@@ -218,9 +220,9 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Grid.ColumnSpan="2" BorderBrush="#99AAB5" Opacity="0.1" BorderThickness="0,1,0,0"/>
+                                    <Border Visibility="{x:Bind Content,Converter={StaticResource MessageToMessageInfoVisibilityConverter}}" Grid.ColumnSpan="2" BorderBrush="#99AAB5" Opacity="0.1" BorderThickness="0,1,0,0"/>
 
-                                    <Ellipse Margin="0,5,0,0" VerticalAlignment="Top" Width="40" Height="40">
+                                    <Ellipse Visibility="{x:Bind Content,Converter={StaticResource MessageToMessageInfoVisibilityConverter}}" Margin="0,5,0,0" VerticalAlignment="Top" Width="40" Height="40">
                                         <Ellipse.Fill>
                                             <ImageBrush ImageSource="{x:Bind Author, Mode=OneWay,Converter={StaticResource AuthorToAvatarConverter}}"/>
                                         </Ellipse.Fill>
@@ -232,13 +234,27 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                        <StackPanel Visibility="{x:Bind Content,Converter={StaticResource MessageToMessageInfoVisibilityConverter}}" Orientation="Horizontal" Margin="5,5,0,0">
                                             <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay,Converter={StaticResource AuthorToNameConverter}}" Foreground="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserToColorConverter}}" FontSize="16" FontWeight="Bold"/>
                                             <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="10"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="1" TextAlignment="Left" Margin="10,2,0,0" TextWrapping="WrapWholeWords" Text="{x:Bind Content,Converter={StaticResource MessageMentionsConverter}, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
-                                        <!--<Image Grid.Row="1" Source="{x:Bind Attachments}"/>-->
+                                        <StackPanel Grid.Row="1"  Margin="10,2,0,0">
+                                            
+                                            <TextBlock TextAlignment="Left" TextWrapping="WrapWholeWords" Text="{x:Bind Content,Converter={StaticResource MessageMentionsConverter}, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
+
+                                            <ListView Margin="-5,0,5,0" ItemsSource="{x:Bind Attachments}" SelectionMode="None">
+                                                <ListView.ItemTemplate>
+                                                    <DataTemplate x:DataType="disc:IAttachment">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Image Source="{x:Bind Filename,Converter={StaticResource FileNameExtentionToFileIconConverter}}"/>
+                                                            <HyperlinkButton Margin="10,0,0,0" Content="{x:Bind Filename}" NavigateUri="{x:Bind Url}" Foreground="#c7c7c7" FontSize="18"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListView.ItemTemplate>
+                                            </ListView>
+                                            
+                                        </StackPanel>
                                     </Grid>
                                 </Grid>
                             </DataTemplate>

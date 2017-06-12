@@ -15,6 +15,8 @@ using Windows.System.Threading;
 using System.Linq;
 using Windows.UI.ViewManagement;
 using System.IO;
+using Windows.Web.Http;
+using Windows.Networking.BackgroundTransfer;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -88,37 +90,37 @@ namespace Discord_Mobile.ViewModels
 
         private async void UpdateUserTypingStatus()
         {
-                if (TextChannel != null && UsersTyping != null && PickedFile == null)
+            if (TextChannel != null && UsersTyping != null && PickedFile == null)
+            {
+                for (int i = 0; i < UsersTyping.Count; i++)
                 {
-                    for (int i = 0; i < UsersTyping.Count; i++)
+                    if (UsersTyping[i].ToBeDeleted())
                     {
-                        if (UsersTyping[i].ToBeDeleted())
-                        {
-                            UsersTyping.Remove(UsersTyping[i]);
-                        }
+                        UsersTyping.Remove(UsersTyping[i]);
                     }
+                }
 
-                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Users_Typing = "";
+
+                    if (UsersTyping.Count >= 3)
                     {
-                        Users_Typing = "";
-
-                        if (UsersTyping.Count >= 3)
-                        {
-                            Users_Typing_Visibility = true;
-                            Users_Typing = "Several users are typing...";
-                        }
-                        else if (UsersTyping.Count == 2)
-                        {
-                            Users_Typing_Visibility = true;
-                            Users_Typing = UsersTyping[0].Username + ", " + UsersTyping[1] + " are typing...";
-                        }
-                        else if (UsersTyping.Count == 1)
-                        {
-                            Users_Typing_Visibility = true;
-                            Users_Typing = UsersTyping[0].Username + " is typing...";
-                        }
-                        else
-                            Users_Typing_Visibility = false;
+                        Users_Typing_Visibility = true;
+                        Users_Typing = "Several users are typing...";
+                    }
+                    else if (UsersTyping.Count == 2)
+                    {
+                        Users_Typing_Visibility = true;
+                        Users_Typing = UsersTyping[0].Username + ", " + UsersTyping[1] + " are typing...";
+                    }
+                    else if (UsersTyping.Count == 1)
+                    {
+                        Users_Typing_Visibility = true;
+                        Users_Typing = UsersTyping[0].Username + " is typing...";
+                    }
+                    else
+                        Users_Typing_Visibility = false;
 
                     //foreach (var typinguser in UsersTyping)
                     //{
@@ -135,7 +137,7 @@ namespace Discord_Mobile.ViewModels
                     //else
                     //    Users_Typing_Visibility = true;
                 });
-                }
+            }
         }
 
         private async Task User_Typing(SocketUser arg1, ISocketMessageChannel arg2)
@@ -533,9 +535,7 @@ namespace Discord_Mobile.ViewModels
                     AttachmentIconString = "\uE74D";
                     AttachmentPathString = string.Format("File Attached: " + PickedFile.Path);
                     NotifyPropertyChanged("TopMessage");
-                    
                 }
-
             }
             else
             {
@@ -544,8 +544,8 @@ namespace Discord_Mobile.ViewModels
                 AttachmentColorString = "White";
                 AttachmentIconString = "\uE898";
                 AttachmentPathString = "";
+                NotifyPropertyChanged("TopMessage");
             }
-
 
             LoadingPopUpIsOpen = false;
         }

@@ -127,14 +127,35 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\avi-24.ico" />
     <Content Include="Assets\BadgeLogo.scale-400.png" />
+    <Content Include="Assets\csv-24.ico" />
+    <Content Include="Assets\dll-24.ico" />
+    <Content Include="Assets\document-24.ico" />
+    <Content Include="Assets\exe-24.ico" />
+    <Content Include="Assets\exel-24.ico" />
+    <Content Include="Assets\file-24.ico" />
+    <Content Include="Assets\flv-24.ico" />
+    <Content Include="Assets\gif-24.ico" />
+    <Content Include="Assets\jpg-24.ico" />
+    <Content Include="Assets\mov-24.ico" />
+    <Content Include="Assets\mp3-24.ico" />
+    <Content Include="Assets\mpg-24.ico" />
     <Content Include="Assets\new_message.wav" />
     <Content Include="Assets\NoAvatarIcon.png" />
     <Content Include="Assets\NoConnection.png" />
+    <Content Include="Assets\pdf-24.ico" />
+    <Content Include="Assets\png-24.ico" />
+    <Content Include="Assets\powerpoint-3-24.ico" />
+    <Content Include="Assets\psd-24.ico" />
+    <Content Include="Assets\rar-24.ico" />
     <Content Include="Assets\SplashScreen.png" />
     <Content Include="Assets\Square150x150Logo.png" />
     <Content Include="Assets\typing.gif" />
     <None Include="Package.StoreAssociation.xml" />
+    <Content Include="Assets\wma-24.ico" />
+    <Content Include="Assets\word-3-24.ico" />
+    <Content Include="Assets\zip-24.ico" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\StoreLogo.png" />
