@@ -17,6 +17,7 @@ using Windows.UI.ViewManagement;
 using System.IO;
 using Windows.Web.Http;
 using Windows.Networking.BackgroundTransfer;
+using Discord.Rest;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -456,6 +457,9 @@ namespace Discord_Mobile.ViewModels
                 NoChannelVisibility = Visibility.Collapsed;
             else
                 NoChannelMessage = "No Messages...";
+            IEnumerable<IMessage> tempPinnedMessageList = await TextChannel.GetPinnedMessagesAsync();
+            foreach (var pinnedMessage in tempPinnedMessageList)
+                PinnedMessageList.Add(pinnedMessage);
             LoadingPopUpIsOpen = false;
         }
 
@@ -1324,6 +1328,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
+        public ObservableCollection<IMessage> PinnedMessageList = new ObservableCollection<IMessage>();
         public ObservableCollection<IMessage> MessageList = new ObservableCollection<IMessage>();
         public static Collection<IMessage> MessageListCopy = new Collection<IMessage>();
 

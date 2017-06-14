@@ -47,7 +47,71 @@
         <Border Loaded="{x:Bind ChatViewModel.IsReady}" Background="#1e2124"/>
         <Button Background="Transparent" HorizontalAlignment="Left" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.ChannelsSplitViewPaneControl}" Content="&#xEA37;"/>
         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource ChannelTopTextConverter}}" Foreground="#99AAB5" FontSize="14" FontWeight="Bold"/>
-        <Button Background="Transparent" HorizontalAlignment="Right" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.UsersSplitViewPaneControl}" Content="&#xE716;"/>
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Background="Transparent" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Content="&#xE718;">
+                <Button.Flyout>
+                    <Flyout Placement="Full">
+                        <Flyout.FlyoutPresenterStyle>
+                            <Style TargetType="FlyoutPresenter">
+                                <Setter Property="Background" Value="#23272A"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                            </Style>
+                        </Flyout.FlyoutPresenterStyle>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border BorderBrush="Gray" BorderThickness="0,0,0,2"/>
+                            <TextBlock HorizontalAlignment="Stretch" Margin="10,10,10,0" Text="Pinned Messages" Foreground="DarkGray" FontSize="18" FontWeight="Bold"/>
+                            
+                            <ListView Grid.Row="1" VerticalContentAlignment="Top" ItemsSource="{x:Bind ChatViewModel.PinnedMessageList, Mode=OneWay}" SelectionMode="None">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="disc:IMessage">
+                                        <Grid Margin="0,5,0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.ColumnSpan="2" Padding="10" BorderBrush="#99AAB5" CornerRadius="2" Opacity="0.1" BorderThickness="1"/>
+
+                                            <Ellipse Margin="0,5,0,0" VerticalAlignment="Top" Width="30" Height="30">
+                                                <Ellipse.Fill>
+                                                    <ImageBrush ImageSource="{x:Bind Author, Mode=OneWay,Converter={StaticResource AuthorToAvatarConverter}}"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+
+                                            <Grid Grid.Column="1">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+
+                                                <StackPanel Visibility="{x:Bind Content,Converter={StaticResource MessageToMessageInfoVisibilityConverter}}" Orientation="Horizontal" Margin="5,5,0,0">
+                                                    <TextBlock TextAlignment="Left" Text="{x:Bind Author,Mode=OneWay,Converter={StaticResource AuthorToNameConverter}}" Foreground="{x:Bind Author,Mode=OneWay,Converter={StaticResource UserToColorConverter}}" FontSize="14" FontWeight="Bold"/>
+                                                    <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="8"/>
+                                                </StackPanel>
+
+                                                <TextBlock Grid.Row="1" MaxLines="10" Margin="10,2,0,0" TextAlignment="Left" TextWrapping="WrapWholeWords" Text="{x:Bind Content,Converter={StaticResource MessageMentionsConverter}, Mode=OneWay}" Foreground="#c7c7c7" FontSize="14" />
+
+                                            </Grid>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+            <Button Background="Transparent" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.UsersSplitViewPaneControl}" Content="&#xE716;"/>
+        </StackPanel>
 
         <SplitView Grid.Row="1" IsPaneOpen="{x:Bind ChatViewModel.ChannelsSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="220">
             <SplitView.Pane>
@@ -239,8 +303,8 @@
                                             <TextBlock TextAlignment="Left" Margin="5,5,0,0" Text="{x:Bind Timestamp,Mode=OneWay,Converter={StaticResource TimeToStringConverter}}" Foreground="LightGray" Opacity="0.9" FontSize="10"/>
                                         </StackPanel>
 
-                                        <StackPanel Grid.Row="1"  Margin="10,2,0,0">
-                                            
+                                        <StackPanel Grid.Row="1" Margin="10,2,0,0">
+
                                             <TextBlock TextAlignment="Left" TextWrapping="WrapWholeWords" Text="{x:Bind Content,Converter={StaticResource MessageMentionsConverter}, Mode=OneWay}" Foreground="#c7c7c7" FontSize="16" />
 
                                             <ListView Margin="-5,0,5,0" ItemsSource="{x:Bind Attachments}" SelectionMode="None">
@@ -253,7 +317,7 @@
                                                     </DataTemplate>
                                                 </ListView.ItemTemplate>
                                             </ListView>
-                                            
+
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
@@ -266,7 +330,7 @@
                     </StackPanel>
                     <TextBlock Margin="5,0,0,5" FontSize="12" Text="{x:Bind ChatViewModel.AttachmentPathString,Mode=OneWay}" Foreground="#99AAB5" VerticalAlignment="Bottom"/>
 
-                    <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="160">
+                    <SplitView PanePlacement="Right" IsPaneOpen="{x:Bind ChatViewModel.UsersSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="180">
                         <SplitView.Pane>
                             <Grid>
                                 <Grid.RowDefinitions>
