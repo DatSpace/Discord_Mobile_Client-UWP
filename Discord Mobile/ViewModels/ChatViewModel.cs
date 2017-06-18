@@ -618,16 +618,17 @@ namespace Discord_Mobile.ViewModels
 
         public void CreateGuildPopUpCreate(object sender, RoutedEventArgs e)
         {
-            if (NewGuildName != "" && NewGuildServer != "Select Server")
+            if (NewGuildName != "" && NewGuildServerLocation != "Select Server")
             {
                 foreach (var region in LoginService.client.VoiceRegions)
                 {
-                    if (region.Name == NewGuildServer)
+                    if (region.Name == NewGuildServerLocation)
                     {
+                        NewGuildName = NewGuildName.Replace(" ", "_");
                         LoginService.client.CreateGuildAsync(NewGuildName, region);
                         CreateGuildPopUpOpenProperty = false;
                         NewGuildName = "";
-                        NewGuildServer = "Select Server";
+                        NewGuildServerLocation = "Select Server";
                     }
                 }
             }
@@ -672,7 +673,7 @@ namespace Discord_Mobile.ViewModels
         public void CreateGuildServerSelect(object sender, RoutedEventArgs e)
         {
             var selection = ((MenuFlyoutItem)sender).Text;
-            NewGuildServer = selection;
+            NewGuildServerLocation = selection;
         }
 
         public void SetPopUpCenter(object sender, object e)
@@ -940,20 +941,20 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private string newGuildServer = "Select Server";
+        private string newGuildServerLocation = "Select Server";
 
-        public string NewGuildServer
+        public string NewGuildServerLocation
         {
             get
             {
-                return newGuildServer;
+                return newGuildServerLocation;
             }
             set
             {
-                if (value != newGuildServer)
+                if (value != newGuildServerLocation)
                 {
-                    newGuildServer = value;
-                    NotifyPropertyChanged("NewGuildServer");
+                    newGuildServerLocation = value;
+                    NotifyPropertyChanged("NewGuildServerLocation");
                 }
             }
         }

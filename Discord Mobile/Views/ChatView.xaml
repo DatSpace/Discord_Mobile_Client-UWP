@@ -45,10 +45,10 @@
         </Grid.RowDefinitions>
 
         <Border Loaded="{x:Bind ChatViewModel.IsReady}" Background="#1e2124"/>
-        <Button Background="Transparent" HorizontalAlignment="Left" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.ChannelsSplitViewPaneControl}" Content="&#xEA37;"/>
+        <Button Background="Transparent" HorizontalAlignment="Left" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.ChannelsSplitViewPaneControl}" Content="&#xEA37;"/>
         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.TopMessage,Mode=OneWay,Converter={StaticResource ChannelTopTextConverter}}" Foreground="#99AAB5" FontSize="14" FontWeight="Bold"/>
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-            <Button Background="Transparent" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Content="&#xE718;">
+            <Button Background="Transparent" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Content="&#xE718;">
                 <Button.Flyout>
                     <Flyout Placement="Full">
                         <Flyout.FlyoutPresenterStyle>
@@ -110,7 +110,7 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
-            <Button Background="Transparent" Width="60" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.UsersSplitViewPaneControl}" Content="&#xE716;"/>
+            <Button Background="Transparent" Foreground="White" FontSize="32" FontFamily="Segoe MDL2 Assets" Click="{x:Bind ChatViewModel.UsersSplitViewPaneControl}" Content="&#xE716;"/>
         </StackPanel>
 
         <SplitView Grid.Row="1" IsPaneOpen="{x:Bind ChatViewModel.ChannelsSplitViewPaneOpen,Mode=TwoWay}" DisplayMode="CompactOverlay" CompactPaneLength="0" OpenPaneLength="220">
@@ -264,7 +264,7 @@
                     </StackPanel>
 
 
-                    <toolkit:PullToRefreshListView PullThreshold="50" ReleaseToRefreshLabel="Realease to load more..." PullToRefreshLabel="Pull to load more..." RefreshRequested="{x:Bind ChatViewModel.LoadMoreMessages}" Margin="0,0,0,20" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" SelectionMode="None">
+                    <toolkit:PullToRefreshListView PullThreshold="50" ReleaseToRefreshLabel="Realease to load more..." PullToRefreshLabel="Pull to load more..." RefreshRequested="{x:Bind ChatViewModel.LoadMoreMessages}" Margin="0,0,0,20" VerticalContentAlignment="Bottom" ItemsSource="{x:Bind ChatViewModel.MessageList, Mode=OneWay}" IsItemClickEnabled="True" SelectionMode="None">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -388,7 +388,7 @@
 
 
                         <TextBlock Text="Server's Name:" Foreground="#7289DA"/>
-                        <TextBox Margin="0,10,0,0" BorderThickness="0" Grid.Row="1" PlaceholderText="Enter a server name:" Text="{x:Bind ChatViewModel.NewGuildName,Mode=TwoWay}"/>
+                        <TextBox Margin="0,10,0,0" InputScope="ChatWithoutEmoji" BorderThickness="0" Grid.Row="1" PlaceholderText="Enter a server name:" Text="{x:Bind ChatViewModel.NewGuildName,Mode=TwoWay}"/>
 
                         <StackPanel Margin="0,10,0,0" Grid.Row="2" Orientation="Horizontal">
                             <TextBlock Text="Server Location:" Foreground="#7289DA" Margin="0,5,0,0"/>
@@ -411,7 +411,7 @@
                             </Button>
                         </StackPanel>
                         <Border Margin="5,10,5,0" Grid.Row="3" Background="Transparent" BorderBrush="#7289DA" BorderThickness="1" CornerRadius="2">
-                            <TextBlock Foreground="#99AAB5" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.NewGuildServer,Mode=OneWay}"/>
+                            <TextBlock Foreground="#99AAB5" HorizontalAlignment="Center" Text="{x:Bind ChatViewModel.NewGuildServerLocation,Mode=OneWay}"/>
                         </Border>
                     </Grid>
                     <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
@@ -435,7 +435,7 @@
                 <Border CornerRadius="5" Background="#1e2124"/>
                 <StackPanel Margin="10">
                     <TextBlock HorizontalAlignment="Center" Text="Create Text Channel" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <TextBox Margin="0,20,0,5" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>
+                    <TextBox Margin="0,20,0,5" InputScope="ChatWithoutEmoji" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>
                     <TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter your channel's prefered name!"/>
 
                     <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
