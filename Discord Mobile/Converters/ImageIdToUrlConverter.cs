@@ -1,25 +1,20 @@
 ﻿using System;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Discord_Mobile.ViewModels;
 using Discord;
+using Discord.WebSocket;
 
 namespace Discord_Mobile.Converters
 {
-    public class AvatarIdToUrlConverter : IValueConverter //Change name
+    public class UserToAvatarUrlConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             BitmapImage s = new BitmapImage(new Uri("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"));
-            foreach (var user in ChatViewModel.GuildUserList)
-            {
-                if (user.Id == (ulong)value && user.GetAvatarUrl() != null)
-                {
-                    s = new BitmapImage(new Uri(user.GetAvatarUrl()));//(String.Format("https://cdn.discordapp.com/avatars/" + parameter.ToString() + "/" + value.ToString() + ".png?size=128")));
-                    break;
-                }
-            }
+            string url = ((SocketGuildUser)value).GetAvatarUrl();
+            if (url != null)
+                s = new BitmapImage(new Uri(url));
+
             return s;
         }
 

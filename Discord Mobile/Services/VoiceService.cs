@@ -1,30 +1,24 @@
-﻿using Discord.Audio;
-using Discord.WebSocket;
-using Discord_Mobile.ViewModels;
+﻿using Discord.WebSocket;
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using Windows.Media.Capture;
-using Windows.Media.Core;
 using Windows.Media.Playback;
-using Windows.Storage.Streams;
 
 namespace Discord_Mobile.Services
 {
     class VoiceService
     {
-        private static IAudioClient AudioClient;
+        //private static IAudioClient AudioClient;
         private static MediaPlayer VoicePlayer;
         //MediaCapture Capture;
         //InMemoryRandomAccessStream tempBuffer;
         //MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings() { StreamingCaptureMode = StreamingCaptureMode.Audio };
 
-        public async static Task Initialize()
+        public async static Task Initialize(SocketVoiceChannel voiceChannel)
         {
             try
             {
-                AudioClient = await ChatViewModel.VoiceChannel.ConnectAsync();
-                AudioClient.StreamCreated += AudioClient_StreamCreated;
+                //AudioClient = await voiceChannel.ConnectAsync();
+                //AudioClient.StreamCreated += AudioClient_StreamCreated;
             }
             catch (Exception e)
             {
@@ -32,14 +26,14 @@ namespace Discord_Mobile.Services
             }
         }
 
-        private static Task AudioClient_StreamCreated(ulong arg1, AudioInStream arg2)
-        {
-            MemoryStream tempStream = new MemoryStream();
-            arg2.CopyToAsync(tempStream);
-            MediaSource stream = MediaSource.CreateFromStream(tempStream.AsRandomAccessStream(), "");
-            VoicePlayer.Source = stream;
-            return Task.CompletedTask;
-        }
+        //private static Task AudioClient_StreamCreated(ulong arg1, AudioInStream arg2)
+        //{
+        //    MemoryStream tempStream = new MemoryStream();
+        //    arg2.CopyToAsync(tempStream);
+        //    MediaSource stream = MediaSource.CreateFromStream(tempStream.AsRandomAccessStream(), "");
+        //    VoicePlayer.Source = stream;
+        //    return Task.CompletedTask;
+        //}
 
         //private async Task<bool> SetRecording()
         //{

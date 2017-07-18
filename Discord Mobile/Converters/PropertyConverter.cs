@@ -3,7 +3,6 @@ using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml.Data;
@@ -21,20 +20,40 @@ namespace Discord_Mobile.Converters
             SolidColorBrush color;
             switch (value)
             {
+                case UserStatus.Offline:
+                    color = new SolidColorBrush(Colors.LightGray);
+                    break;
                 case UserStatus.Online:
                     color = new SolidColorBrush(Colors.SpringGreen);
                     break;
                 case UserStatus.Idle:
+                case UserStatus.AFK:
                     color = new SolidColorBrush(Colors.Orange);
                     break;
                 case UserStatus.DoNotDisturb:
                     color = new SolidColorBrush(Colors.Red);
                     break;
                 default:
-                    color = new SolidColorBrush(Colors.Black);
+                    color = new SolidColorBrush(Colors.LightGray);
                     break;
             }
             return color;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MessageToTimeStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (((IMessage)value).EditedTimestamp.HasValue)
+                return (((IMessage)value).EditedTimestamp.Value.LocalDateTime.ToString()).Substring(0, 16) + " (Edited)";
+            else
+                return ((IMessage)value).Timestamp.LocalDateTime.ToString().Substring(0, 16);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -224,25 +243,21 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    public class IdToNicknameOrUsernameConverter : IValueConverter
+    public class UserToNicknameOrUsernameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             string name = "";
-            foreach (var user in ChatViewModel.GuildUserList)
-            {
-                if (user.Id == (ulong)value)
-                {
-                    if (user.Nickname != null)
-                        name = user.Nickname;
-                    else
-                        name = user.Username;
-                }
-            }
+
+            if (((SocketGuildUser)value).Nickname != null)
+                name = ((SocketGuildUser)value).Nickname;
+            else
+                name = ((SocketGuildUser)value).Username;
+
 
             if (name.Length >= 18)
             {
-                name = string.Format(name.Substring(0, 17) + "...");
+                name = name.Substring(0, 17) + "...";
             }
 
             return name;
@@ -293,6 +308,8 @@ namespace Discord_Mobile.Converters
                     url = ((SocketGuildUser)value).GetAvatarUrl();
                 else if (value.GetType() == typeof(RestUser))
                     url = ((RestUser)value).GetAvatarUrl();
+                else if (value.GetType() == typeof(RestWebhookUser))
+                    url = ((RestWebhookUser)value).GetAvatarUrl();
                 else
                     url = ((SocketSelfUser)value).GetAvatarUrl();
 
@@ -308,38 +325,20 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    public class RoleNameToRoleUsersConverter : IValueConverter
+    public class VoiceChannelToUsersCountConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            string voicerUsersCount = "N/A";
             if (value != null)
             {
-                Collection<SocketGuildUser> FilteredUsers = new Collection<SocketGuildUser>();
-                foreach (var user in ChatViewModel.GuildUserList)
-                {
-                    //string UserRoleName = null;
-                    List<SocketRole> tempSortedUserRoles = user.Roles.OrderByDescending(x => x.Position).ToList();
-                    int i = tempSortedUserRoles.Count;
-                    if (user.GetType() == typeof(SocketGuildUser))
-                    {
-                        while (i > 0 && !tempSortedUserRoles.First().IsHoisted)
-                        {
-                            if (!tempSortedUserRoles.First().IsEveryone)
-                                tempSortedUserRoles.RemoveAt(0);
-                            i--;
-                        }
-                    }
-                    //else if (user.GetType() != typeof(RestUser) && value.GetType() != typeof(RestWebhookUser))
-                    //{
-                    //    UserRoleName = ((IEnumerable<SocketRole>)user).OrderByDescending(x => x.Position).First().Name;
-                    //}
-                    if (tempSortedUserRoles.First().Name == value.ToString() || (tempSortedUserRoles.First().IsEveryone && value.ToString() == "@everyone"))
-                        FilteredUsers.Add(user);
-                }
-                return FilteredUsers;
+                voicerUsersCount = ((SocketVoiceChannel)value).Users.Count + " / ";
+                if (((SocketVoiceChannel)value).UserLimit != null)
+                    voicerUsersCount = voicerUsersCount + ((SocketVoiceChannel)value).UserLimit;
+                else
+                    voicerUsersCount = voicerUsersCount + "\u221E";
             }
-            else
-                return null;
+            return voicerUsersCount;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -347,48 +346,6 @@ namespace Discord_Mobile.Converters
             throw new NotImplementedException();
         }
     }
-
-    //public class DiscordColorToColorConverter : IValueConverter
-    //{
-    //    public object Convert(object value, Type targetType, object parameter, string language)
-    //    {
-    //        Discord.Color RoleColor = new Discord.Color(255, 255, 255);
-    //        SolidColorBrush color = new SolidColorBrush();
-
-    //        if (value != null)
-    //        {
-    //            if (((Discord.Color)value).RawValue != Discord.Color.Default.RawValue)
-    //                RoleColor = (Discord.Color)value;
-    //            color = new SolidColorBrush(Windows.UI.Color.FromArgb(255, RoleColor.R, RoleColor.G, RoleColor.B));
-    //        }
-
-    //        return color;
-    //    }
-
-    //    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-    //public class VoiceUsersToCountConverter : IValueConverter
-    //{
-    //    public object Convert(object value, Type targetType, object parameter, string language)
-    //    {
-    //        if (value != null && parameter != null)
-    //        {
-    //            int online = ((IReadOnlyCollection<SocketGuildUser>)(value)).Count;
-    //            return string.Format("(" + online + "/" + parameter + ")");
-    //        }
-    //        else
-    //            return "Ukn";
-    //    }
-
-    //    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
 
     public class RecipientToUsernameConverter : IValueConverter
     {
@@ -407,26 +364,45 @@ namespace Discord_Mobile.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            IMessage previousMessage = null;
+
             if (ChatViewModel.MessageListCopy.Count > 1)
             {
-                for (int i = 0; i < ChatViewModel.MessageListCopy.Count; i++)
+                foreach (IMessage message in ChatViewModel.MessageListCopy)
                 {
-                    if ((string)value == ChatViewModel.MessageListCopy[i].Content)
+                    if ((IMessage)value == message)
                     {
-                        if (i > 0)
+                        if (previousMessage != null)
                         {
-                            double timeDif = ChatViewModel.MessageListCopy[i].Timestamp.Subtract(ChatViewModel.MessageListCopy[i - 1].Timestamp).TotalMinutes;
-                            if ((ChatViewModel.MessageListCopy[i - 1].Author == ChatViewModel.MessageListCopy[i].Author) &&  timeDif < 20)
+                            double timeDif = message.Timestamp.Subtract(previousMessage.Timestamp).TotalMinutes;
+                            if ((previousMessage.Author == message.Author) && timeDif < 20)
                                 return Visibility.Collapsed;
+                            break;
                         }
                         else
                             return Visibility.Visible;
                     }
+                    previousMessage = message;
                 }
             }
             else
                 return Visibility.Visible;
             return Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+    public class VoiceChannelToVoiceChannelUsers : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return ((SocketVoiceChannel)value).Users;
+
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

@@ -49,7 +49,8 @@ namespace Discord_Mobile.Services
 
         public async Task MakeConnectionAsync(string userToken)
         {
-            client = new DiscordSocketClient();
+            DiscordSocketConfig Config = new DiscordSocketConfig { MessageCacheSize = 90 };
+            client = new DiscordSocketClient(Config);
             
             // Configure the client to use a Bot token, and use our token
             await client.LoginAsync(TokenType.User, userToken);

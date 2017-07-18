@@ -43,23 +43,23 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public bool Enable_Sounds
+        public bool EnableSounds
         {
             get
             {
-                if (localSettings.Values["Enable_Sounds"] == null)
+                if (localSettings.Values["EnableSounds"] == null)
                 {
-                    localSettings.Values["Enable_Sounds"] = true;
+                    localSettings.Values["EnableSounds"] = true;
                     return true;
                 }
-                return (bool)localSettings.Values["Enable_Sounds"];
+                return (bool)localSettings.Values["EnableSounds"];
             }
             set
             {
-                if (value != (bool)localSettings.Values["Enable_Sounds"])
+                if (value != (bool)localSettings.Values["EnableSounds"])
                 {
-                    localSettings.Values["Enable_Sounds"] = value;
-                    NotifyPropertyChanged("Enable_Sounds");
+                    localSettings.Values["EnableSounds"] = value;
+                    NotifyPropertyChanged("EnableSounds");
                 }
             }
         }

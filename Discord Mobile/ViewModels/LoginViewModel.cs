@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Windows.Networking.Connectivity;
 using Windows.Security.Credentials;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -39,9 +40,21 @@ namespace Discord_Mobile.ViewModels
                     //And try to connect!
                     try
                     {
-                        await loginService.MakeConnectionAsync(loginCredential.Password);
-                        Frame rootFrame = Window.Current.Content as Frame;
-                        rootFrame.Navigate(typeof(ChatView));
+                        NetworkConnectivityLevel connectionStatus = NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel();
+                        switch (connectionStatus)
+                        {
+                            case NetworkConnectivityLevel.InternetAccess:
+                                await loginService.MakeConnectionAsync(loginCredential.Password);
+                                Frame rootFrame = Window.Current.Content as Frame;
+                                rootFrame.Navigate(typeof(ChatView));
+                                break;
+                            case NetworkConnectivityLevel.ConstrainedInternetAccess:
+                                LoginStatusTextBlock = "Limited Internet Access";
+                                break;
+                            default:
+                                LoginStatusTextBlock = "No Internet Acccess";
+                                break;
+                        }
                     }
                     catch
                     {
@@ -60,12 +73,24 @@ namespace Discord_Mobile.ViewModels
             {
                 try
                 {
-                    LoginButtonIsEnabled = false;
-                    await loginService.MakeConnectionAsync(TokenTextBox);
-                    if (RememberMeIsChecked)
-                        LoginService.SaveUser(TokenTextBox);
-                    Frame rootFrame = Window.Current.Content as Frame;
-                    rootFrame.Navigate(typeof(ChatView));
+                    NetworkConnectivityLevel connectionStatus = NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel();
+                    switch (connectionStatus)
+                    {
+                        case NetworkConnectivityLevel.InternetAccess:
+                            LoginButtonIsEnabled = false;
+                            await loginService.MakeConnectionAsync(TokenTextBox);
+                            if (RememberMeIsChecked)
+                                LoginService.SaveUser(TokenTextBox);
+                            Frame rootFrame = Window.Current.Content as Frame;
+                            rootFrame.Navigate(typeof(ChatView));
+                            break;
+                        case NetworkConnectivityLevel.ConstrainedInternetAccess:
+                            ConnectionErrorTextBlock = "Limited Internet Access!";
+                            break;
+                        default:
+                            ConnectionErrorTextBlock = "No Internet Connection!";
+                            break;
+                    }
                 }
                 catch
                 {
