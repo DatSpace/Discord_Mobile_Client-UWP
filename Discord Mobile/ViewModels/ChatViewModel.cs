@@ -96,16 +96,64 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserJoined += UserJoined;
             LoginService.client.UserLeft += UserJoined;
             LoginService.client.UserIsTyping += UserTypingEvent;
+            LoginService.client.UserVoiceStateUpdated += UserVoiceStateUpdated;
             //LoginService.client.Log += ClientLog;
 
             FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
             FilePicker.FileTypeFilter.Add("*");
             FilePicker.CommitButtonText = "Send File";
         }
-
+        
         private Task ClientLogAsync(LogMessage arg)
         {
             throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
+        }
+
+        private async Task UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
+        {
+            if (arg2.VoiceChannel != null)
+            {
+                if (arg2.VoiceChannel.Guild == Guild)
+                {
+                    if (arg2.VoiceChannel.Users != arg2.VoiceChannel.Users)
+                    {
+                        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            VoiceChannelsList.Clear();
+                            foreach (SocketGuildChannel tempchannel in Guild.Channels.OrderBy(channel => channel.Position))
+                            {
+                                if (tempchannel is SocketVoiceChannel)
+                                {
+                                    if (Guild.CurrentUser.GetPermissions(tempchannel).Connect)
+                                    {
+                                        VoiceChannelsList.Add(tempchannel);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            else
+            {
+                if (arg3.VoiceChannel.Guild == Guild)
+                {
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        VoiceChannelsList.Clear();
+                        foreach (SocketGuildChannel tempchannel in Guild.Channels.OrderBy(channel => channel.Position))
+                        {
+                            if (tempchannel is SocketVoiceChannel)
+                            {
+                                if (Guild.CurrentUser.GetPermissions(tempchannel).Connect)
+                                {
+                                    VoiceChannelsList.Add(tempchannel);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         private async Task UpdateUserTypingStatus()
@@ -345,7 +393,6 @@ namespace Discord_Mobile.ViewModels
 
                 TextChannelsList.Clear();
                 VoiceChannelsList.Clear();
-                VoiceChannelsListCopy.Clear();
                 MessageList.Clear();
                 MessageListCopy.Clear();
                 PinnedMessageList.Clear();
@@ -410,7 +457,6 @@ namespace Discord_Mobile.ViewModels
             Guild = (SocketGuild)e.ClickedItem;
             NoGuildVisibility = Visibility.Collapsed;
             GuildSelectedText = Guild.Name;
-            GuildChannelsList = Guild.Channels;
             GuildPermissions = Guild.CurrentUser.GuildPermissions;
             SetChannels();
             GuildSettingsButtonVisibility = Visibility.Visible;
@@ -455,8 +501,7 @@ namespace Discord_Mobile.ViewModels
         {
             TextChannelsList.Clear();
             VoiceChannelsList.Clear();
-            VoiceChannelsListCopy.Clear();
-            foreach (SocketGuildChannel tempchannel in GuildChannelsList)
+            foreach (SocketGuildChannel tempchannel in Guild.Channels.OrderBy(channel => channel.Position))
             {
                 if (tempchannel is SocketTextChannel)
                 {
@@ -470,24 +515,9 @@ namespace Discord_Mobile.ViewModels
                     if (Guild.CurrentUser.GetPermissions(tempchannel).Connect)
                     {
                         VoiceChannelsList.Add(tempchannel);
-                        VoiceChannelsListCopy.Add(tempchannel);
                     }
                 }
             }
-
-            TextChannelsList = OrderChannels(TextChannelsList);
-            VoiceChannelsList = OrderChannels(VoiceChannelsList);
-            VoiceChannelsListCopy = OrderChannels(VoiceChannelsListCopy);
-        }
-
-        private static ObservableCollection<SocketGuildChannel> OrderChannels(ObservableCollection<SocketGuildChannel> channels)
-        {
-            ObservableCollection<SocketGuildChannel> temp;
-            temp = new ObservableCollection<SocketGuildChannel>(channels.OrderBy(p => p.Position));
-            channels.Clear();
-            foreach (SocketGuildChannel j in temp)
-                channels.Add(j);
-            return channels;
         }
 
         public async Task SelectTextChannel(object sender, ItemClickEventArgs e)
@@ -1380,29 +1410,10 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private IReadOnlyCollection<SocketGuildChannel> guildChannelsList = null;
-
-        public IReadOnlyCollection<SocketGuildChannel> GuildChannelsList
-        {
-            get
-            {
-                return guildChannelsList;
-            }
-            set
-            {
-                if (value != guildChannelsList)
-                {
-                    guildChannelsList = value;
-                    NotifyPropertyChanged("GuildChannelsList");
-                }
-            }
-        }
-
         public static Collection<SocketGuildUser> GuildUserList = new Collection<SocketGuildUser>();
 
         public ObservableCollection<SocketGuildChannel> TextChannelsList = new ObservableCollection<SocketGuildChannel>();
         public ObservableCollection<SocketGuildChannel> VoiceChannelsList = new ObservableCollection<SocketGuildChannel>();
-        public static ObservableCollection<SocketGuildChannel> VoiceChannelsListCopy = new ObservableCollection<SocketGuildChannel>();
 
         private string usersTyping = "";
 
