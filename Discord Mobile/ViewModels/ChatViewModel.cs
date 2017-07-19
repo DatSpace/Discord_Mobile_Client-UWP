@@ -77,7 +77,8 @@ namespace Discord_Mobile.ViewModels
             {
                 User = LoginService.client.CurrentUser;
                 SetUser();
-                GuildsList = LoginService.client.Guilds;
+                foreach (SocketGuild guild in LoginService.client.Guilds)
+                    GuildsList.Add(guild);
                 while (GuildsLoadedNumber < GuildsList.Count)
                 {
                 }
@@ -86,6 +87,7 @@ namespace Discord_Mobile.ViewModels
 
             LoginService.client.MessageReceived += MessageReceived;
             LoginService.client.MessageDeleted += MessageDeleted;
+            LoginService.client.MessageUpdated += MessageEdited;
             LoginService.client.CurrentUserUpdated += UserUpdated;
             LoginService.client.LeftGuild += JoinedGuild;
             LoginService.client.JoinedGuild += JoinedGuild;
@@ -147,7 +149,6 @@ namespace Discord_Mobile.ViewModels
         {
             if (DMChannel == arg2 || TextChannel == arg2)
             {
-
                 if (!UsersTypingString.Contains(arg1.Username))
                 {
                     UsersTypingCollection.Add(new UsersTyping { Username = arg1.Username, TimeChecked = DateTime.Now });
@@ -204,8 +205,42 @@ namespace Discord_Mobile.ViewModels
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                GuildsList = LoginService.client.Guilds;
+                foreach (SocketGuild guild in LoginService.client.Guilds)
+                    GuildsList.Add(guild);
             });
+        }
+
+        private async Task MessageEdited(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
+        {
+            if (arg3 == TextChannel || arg3 == DMChannel)
+            {
+                if (arg1.HasValue)
+                {
+                    int index = MessageList.IndexOf(arg2);
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList[index] = arg2;
+                        MessageListCopy[index] = arg2;
+                    });
+                }
+                else
+                {
+                    ulong messageId = arg1.Id;
+                    foreach (IMessage message in MessageList)
+                    {
+                        if (message.Id == messageId)
+                        {
+                            int index = MessageList.IndexOf(message);
+                            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                MessageList[index] = arg2;
+                                MessageListCopy[index] = arg2;
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         private async Task MessageDeleted(Cacheable<IMessage, ulong> arg1, ISocketMessageChannel arg2)
@@ -275,26 +310,29 @@ namespace Discord_Mobile.ViewModels
         {
             if (arg.Channel == DMChannel || arg.Channel == TextChannel)
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                if (((IMessage)arg).Type == MessageType.Default)
                 {
-                    for (int i = 0; i < UsersTypingCollection.Count; i++)
+                    await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        if (UsersTypingCollection[i].Username == arg.Author.Username)
+                        for (int i = 0; i < UsersTypingCollection.Count; i++)
                         {
-                            UsersTypingCollection.Remove(UsersTypingCollection[i]);
+                            if (UsersTypingCollection[i].Username == arg.Author.Username)
+                            {
+                                UsersTypingCollection.Remove(UsersTypingCollection[i]);
+                            }
                         }
-                    }
-                    MessageList.Add(arg);
-                    MessageListCopy.Add(arg);
-                    if ((bool)localSettings.Values["EnableSounds"])
-                    {
-                        SoundPath = null;
-                        SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
-                    }
+                        MessageList.Add(arg);
+                        MessageListCopy.Add(arg);
+                        if ((bool)localSettings.Values["EnableSounds"])
+                        {
+                            SoundPath = null;
+                            SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
+                        }
 
-                    NoChannelVisibility = Visibility.Collapsed;
+                        NoChannelVisibility = Visibility.Collapsed;
 
-                });
+                    });
+                }
             }
         }
 
@@ -460,7 +498,7 @@ namespace Discord_Mobile.ViewModels
             HasSendFilePermission = false;
             TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
             NumOfMessages = 30;
-            IEnumerable<IMessage> tempMessageList = (IEnumerable<IMessage>)await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
+            IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
             MessageList.Clear();
             MessageListCopy.Clear();
             foreach (var item in tempMessageList)
@@ -633,7 +671,7 @@ namespace Discord_Mobile.ViewModels
 
                 profileOption.Click += (sender2, e2) =>
                 {
-                   //something
+                    //something
                 };
 
                 mentionOption.Click += (sender2, e2) =>
@@ -654,7 +692,7 @@ namespace Discord_Mobile.ViewModels
                     //MenuFlyoutItem addFriendOption = new MenuFlyoutItem { Text = "Add Friend" };
                     //MenuFlyoutItem blockOption = new MenuFlyoutItem { Text = "Block" };
                     MenuFlyoutSubItem rolesListOption = new MenuFlyoutSubItem { Text = "Roles" };
-                    
+
                     messageOption.Click += (sender2, e2) =>
                     {
                         var task = Task.Run(async () =>
@@ -885,6 +923,7 @@ namespace Discord_Mobile.ViewModels
         public ObservableCollection<IDMChannel> DMChannelsList = new ObservableCollection<IDMChannel>();
 
         public IOrderedEnumerable<IGrouping<SocketRole, SocketGuildUser>> GroupedGuildUsers;
+        public ObservableCollection<SocketGuild> GuildsList = new ObservableCollection<SocketGuild>();
 
         private string searchUserText = "";
 
@@ -1337,24 +1376,6 @@ namespace Discord_Mobile.ViewModels
                 {
                     userName = value;
                     NotifyPropertyChanged("UserName");
-                }
-            }
-        }
-
-        private IReadOnlyCollection<SocketGuild> guildsList = null;
-
-        public IReadOnlyCollection<SocketGuild> GuildsList
-        {
-            get
-            {
-                return guildsList;
-            }
-            set
-            {
-                if (value != guildsList)
-                {
-                    guildsList = value;
-                    NotifyPropertyChanged("GuildsList");
                 }
             }
         }

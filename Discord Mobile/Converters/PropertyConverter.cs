@@ -370,7 +370,7 @@ namespace Discord_Mobile.Converters
             {
                 foreach (IMessage message in ChatViewModel.MessageListCopy)
                 {
-                    if ((IMessage)value == message)
+                    if (((IMessage)value).Id == message.Id)
                     {
                         if (previousMessage != null)
                         {

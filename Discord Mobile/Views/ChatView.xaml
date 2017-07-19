@@ -136,7 +136,7 @@
                                     <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14" Text="&#59259;" FontFamily="Segoe MDL2 Assets" Foreground="#7289DA"/>
                                 </Border>
                             </Button>
-                            <ListView ScrollViewer.VerticalScrollBarVisibility="Auto" ItemClick="{x:Bind ChatViewModel.SelectGuild}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True">
+                            <ListView ScrollViewer.VerticalScrollBarVisibility="Auto" CanReorderItems="True" AllowDrop="True" ItemClick="{x:Bind ChatViewModel.SelectGuild}" ItemsSource="{x:Bind ChatViewModel.GuildsList, Mode=OneWay}" IsItemClickEnabled="True">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="discweb:SocketGuild">
                                         <Ellipse Margin="0,5,0,5" Width="40" Height="40">
