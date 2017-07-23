@@ -1,24 +1,26 @@
-﻿using Discord_Mobile.Services;
+﻿using Discord;
+using Discord.WebSocket;
+using Discord_Mobile.Models;
+using Discord_Mobile.Services;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
+using Windows.Networking.Connectivity;
+using Windows.System.Threading;
+using Windows.UI;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Discord;
-using System.Collections.Generic;
-using Discord.WebSocket;
-using System.Collections.ObjectModel;
-using System;
-using Windows.UI.Core;
-using Discord_Mobile.Models;
-using Windows.System.Threading;
-using System.Linq;
-using Windows.UI.ViewManagement;
-using System.IO;
 using Windows.UI.Xaml.Input;
-using Windows.Networking.Connectivity;
-using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace Discord_Mobile.ViewModels
 {
@@ -38,7 +40,10 @@ namespace Discord_Mobile.ViewModels
         private IDMChannel DMChannel;
         private Windows.Storage.Pickers.FileOpenPicker FilePicker = new Windows.Storage.Pickers.FileOpenPicker();
         private Stream PickedFileStream;
+        private Stream PickedImageStream;
         public static Windows.Storage.StorageFile PickedFile;
+        private static Windows.Storage.StorageFile PickedImage;
+        private RestVoiceRegion OptimalVoiceRegion;
         //private ChannelPermissions VoiceChannelPermissions;
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
@@ -73,12 +78,21 @@ namespace Discord_Mobile.ViewModels
                 UpdateUserTypingStatus();
             }, TimeSpan.FromSeconds(3));
 
+            foreach (RestVoiceRegion region in LoginService.client.VoiceRegions)
+            {
+                if (region.IsOptimal)
+                    OptimalVoiceRegion = region;
+            }
+
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 User = LoginService.client.CurrentUser;
                 SetUser();
                 foreach (SocketGuild guild in LoginService.client.Guilds)
                     GuildsList.Add(guild);
+
+                NewGuildServerRegion = OptimalVoiceRegion;
+
                 while (GuildsLoadedNumber < GuildsList.Count)
                 {
                 }
@@ -98,12 +112,8 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.UserIsTyping += UserTypingEvent;
             LoginService.client.UserVoiceStateUpdated += UserVoiceStateUpdated;
             //LoginService.client.Log += ClientLog;
-
-            FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
-            FilePicker.FileTypeFilter.Add("*");
-            FilePicker.CommitButtonText = "Send File";
         }
-        
+
         private Task ClientLogAsync(LogMessage arg)
         {
             throw new Exception("Message: " + arg.Message + ", Severity: " + arg.Severity + ", Source: " + arg.Source);
@@ -253,6 +263,7 @@ namespace Discord_Mobile.ViewModels
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                GuildsList.Clear();
                 foreach (SocketGuild guild in LoginService.client.Guilds)
                     GuildsList.Add(guild);
             });
@@ -374,7 +385,7 @@ namespace Discord_Mobile.ViewModels
                         if ((bool)localSettings.Values["EnableSounds"])
                         {
                             SoundPath = null;
-                            SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/new_message.wav");
+                            SoundPath = new Uri("ms-appx://Discord_Mobile/Assets/Sounds/new_message.wav");
                         }
 
                         NoChannelVisibility = Visibility.Collapsed;
@@ -484,8 +495,19 @@ namespace Discord_Mobile.ViewModels
                     SearchUsersText = "";
                 foreach (SocketGuildUser guilduser in Guild.Users)
                 {
-                    if (guilduser.Username != null && guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
-                        GuildUserList.Add(guilduser);
+                    if (guilduser.Username != null)
+                    {
+                        if (guilduser.Nickname != null)
+                        {
+                            if (guilduser.Nickname.ToLower().StartsWith(SearchUsersText.ToLower()))
+                                GuildUserList.Add(guilduser);
+                        }
+                        else
+                        {
+                            if (guilduser.Username.ToLower().StartsWith(SearchUsersText.ToLower()))
+                                GuildUserList.Add(guilduser);
+                        }
+                    }
                 }
                 GroupedGuildUsers = from user in GuildUserList.Where(user => user.Status != UserStatus.Offline) group user by user.Roles.Where(role => role.IsHoisted || role.IsEveryone).OrderByDescending(x => x.Position).First() into grp orderby grp.Key.Position descending select grp;
                 NotifyPropertyChanged("GroupedGuildUsers");
@@ -616,10 +638,13 @@ namespace Discord_Mobile.ViewModels
             LoadingPopUpIsOpen = false;
         }
 
-        public async Task SelectFile()
+        public async Task FileButtonClicked()
         {
             LoadingPopUpIsOpen = true;
 
+            FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            FilePicker.FileTypeFilter.Add("*");
+            FilePicker.CommitButtonText = "Send File";
             if (PickedFile == null)
             {
                 PickedFile = await FilePicker.PickSingleFileAsync();
@@ -730,6 +755,8 @@ namespace Discord_Mobile.ViewModels
                             return await heldUser.GetOrCreateDMChannelAsync();
                         });
                         DMChannel = task.Result;
+                        TextChannel = null;
+                        Guild = null;
                         SelectDMChannel(null, null);
                         var dMChannels = LoginService.client.DMChannels;
                         DMChannelsList.Clear();
@@ -752,7 +779,7 @@ namespace Discord_Mobile.ViewModels
                     foreach (SocketRole role in heldUser.Roles.OrderByDescending(x => x.Position).Where(x => !x.IsEveryone))
                     {
                         SolidColorBrush roleColor = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                        if (role.Color.RawValue != Color.Default.RawValue)
+                        if (role.Color.RawValue != Discord.Color.Default.RawValue)
                             roleColor = new SolidColorBrush(Windows.UI.Color.FromArgb(255, role.Color.R, role.Color.G, role.Color.B));
                         rolesListOption.Items.Add(new MenuFlyoutItem { Text = role.Name, Foreground = roleColor });
                     }
@@ -782,8 +809,10 @@ namespace Discord_Mobile.ViewModels
 
                 copyOption.Click += (sender2, e2) =>
                 {
-                    Windows.ApplicationModel.DataTransfer.DataPackage dataPackage = new Windows.ApplicationModel.DataTransfer.DataPackage();
-                    dataPackage.RequestedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+                    Windows.ApplicationModel.DataTransfer.DataPackage dataPackage = new Windows.ApplicationModel.DataTransfer.DataPackage()
+                    {
+                        RequestedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy
+                    };
                     dataPackage.SetText(heldMessage.Content);
                     Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dataPackage);
                 };
@@ -805,6 +834,36 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
+        public async void NewGuildChangeIcon(object sender, RoutedEventArgs e)
+        {
+            FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            FilePicker.FileTypeFilter.Add(".jpg");
+            FilePicker.FileTypeFilter.Add(".jpeg");
+            FilePicker.FileTypeFilter.Add(".png");
+            FilePicker.FileTypeFilter.Add(".gif");
+            FilePicker.CommitButtonText = "Select Image";
+
+            PickedImage = await FilePicker.PickSingleFileAsync();
+
+            if (PickedImage != null)
+            {
+                var imageProperties = await PickedImage.Properties.GetImagePropertiesAsync();
+                if (imageProperties.Height >= 128 && imageProperties.Width >= 128)
+                {
+                    PickedImageStream = await PickedImage.OpenStreamForReadAsync();
+                    BitmapImage guildIcon = new BitmapImage();
+                    guildIcon.SetSource(PickedImageStream.AsRandomAccessStream());
+                    NewGuildIcon = guildIcon;
+                }
+                else
+                {
+                    PickedImage = null;
+                    PickedImageStream = null;
+                }
+            }
+
+        }
+
         public void ChannelsSplitViewPaneControl(object sender, RoutedEventArgs e)
         {
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
@@ -816,32 +875,27 @@ namespace Discord_Mobile.ViewModels
 
         }
 
-        public void CreateGuildPopUpOpen(object sender, RoutedEventArgs e)
+        public void CreateGuildServerSelect(object sender, RoutedEventArgs e)
         {
-            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
-            CreateGuildPopUpOpenProperty = true;
-        }
-
-        public void CreateGuildPopUpCancel(object sender, RoutedEventArgs e)
-        {
-            CreateGuildPopUpOpenProperty = false;
-        }
-
-        public void CreateGuildPopUpCreate(object sender, RoutedEventArgs e)
-        {
-            if (NewGuildName != "" && NewGuildServerLocation != "Select Server")
+            var selection = ((MenuFlyoutItem)sender).Text;
+            foreach (RestVoiceRegion region in LoginService.client.VoiceRegions)
             {
-                foreach (var region in LoginService.client.VoiceRegions)
-                {
-                    if (region.Name == NewGuildServerLocation)
-                    {
-                        NewGuildName = NewGuildName.Replace(" ", "_");
-                        LoginService.client.CreateGuildAsync(NewGuildName, region);
-                        CreateGuildPopUpOpenProperty = false;
-                        NewGuildName = "";
-                        NewGuildServerLocation = "Select Server";
-                    }
-                }
+                if (region.Name == selection)
+                    NewGuildServerRegion = region;
+            }
+        }
+
+        public async void CreateGuildPopUpCreate(object sender, RoutedEventArgs e)
+        {
+            if (NewGuildName.Trim() != "")
+            {
+                NewGuildName = NewGuildName.Replace(" ", "_");
+                await LoginService.client.CreateGuildAsync(NewGuildName.Trim(), NewGuildServerRegion, PickedImageStream);
+                NewGuildServerRegion = OptimalVoiceRegion;
+                NewGuildIcon = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/NoAvatarIcon.png"));
+                NewGuildName = "";
+                PickedImage = null;
+                PickedImageStream = null;
             }
         }
 
@@ -855,6 +909,41 @@ namespace Discord_Mobile.ViewModels
                 CreateChannelPopUpOpenProperty = false;
                 NewChannelName = "";
                 LoadingPopUpIsOpen = false;
+            }
+        }
+
+        public async void ChangeUserGameStatus(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                string gameStatus = ((TextBox)sender).Text;
+                await LoginService.client.SetGameAsync(gameStatus);
+                ((TextBox)sender).Text = "";
+            }
+        }
+
+            public async void ChangeUserStatus(object sender, ItemClickEventArgs e)
+        {
+            string statusSelected = ((TextBlock)((Grid)e.ClickedItem).Children.Where(x => x.GetType() == typeof(TextBlock)).First()).Text;
+
+            switch (statusSelected)
+            {
+                case "Online":
+                    await LoginService.client.SetStatusAsync(UserStatus.Online);
+                    UserStatusColor = new SolidColorBrush(Colors.MediumSpringGreen);
+                    break;
+                case "Idle":
+                    await LoginService.client.SetStatusAsync(UserStatus.Idle);
+                    UserStatusColor = new SolidColorBrush(Colors.DarkOrange);
+                    break;
+                case "Do Not Disturb":
+                    await LoginService.client.SetStatusAsync(UserStatus.DoNotDisturb);
+                    UserStatusColor = new SolidColorBrush(Colors.Red);
+                    break;
+                case "Invisible":
+                    await LoginService.client.SetStatusAsync(UserStatus.Invisible);
+                    UserStatusColor = new SolidColorBrush(Colors.LightGray);
+                    break;
             }
         }
 
@@ -881,12 +970,6 @@ namespace Discord_Mobile.ViewModels
             CreateChannelPopUpOpenProperty = false;
         }
 
-        public void CreateGuildServerSelect(object sender, RoutedEventArgs e)
-        {
-            var selection = ((MenuFlyoutItem)sender).Text;
-            NewGuildServerLocation = selection;
-        }
-
         public void SetPopUpCenter(object sender, object e)
         {
             ScreenHorizontalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Width / 2) - (((Grid)sender).ActualWidth / 2));
@@ -894,6 +977,24 @@ namespace Discord_Mobile.ViewModels
         }
 
         //######################################################################
+
+        private BitmapImage newGuildIcon = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/NoAvatarIcon.png"));
+
+        public BitmapImage NewGuildIcon
+        {
+            get
+            {
+                return newGuildIcon;
+            }
+            set
+            {
+                if (value != newGuildIcon)
+                {
+                    newGuildIcon = value;
+                    NotifyPropertyChanged("NewGuildIcon");
+                }
+            }
+        }
 
         private string attachmentPathString = "";
 
@@ -973,7 +1074,6 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public bool LoadingDisableMenu = false;
         private bool loadingPopUpIsOpen = true;
 
         public bool LoadingPopUpIsOpen
@@ -987,9 +1087,7 @@ namespace Discord_Mobile.ViewModels
                 if (value != loadingPopUpIsOpen)
                 {
                     loadingPopUpIsOpen = value;
-                    LoadingDisableMenu = !value;
                     NotifyPropertyChanged("LoadingPopUpIsOpen");
-                    NotifyPropertyChanged("LoadingDisableMenu");
                 }
             }
         }
@@ -1156,20 +1254,20 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private string newGuildServerLocation = "Select Server";
+        private RestVoiceRegion newGuildServerRegion;
 
-        public string NewGuildServerLocation
+        public RestVoiceRegion NewGuildServerRegion
         {
             get
             {
-                return newGuildServerLocation;
+                return newGuildServerRegion;
             }
             set
             {
-                if (value != newGuildServerLocation)
+                if (value != newGuildServerRegion)
                 {
-                    newGuildServerLocation = value;
-                    NotifyPropertyChanged("NewGuildServerLocation");
+                    newGuildServerRegion = value;
+                    NotifyPropertyChanged("NewGuildServerRegion");
                 }
             }
         }
@@ -1282,24 +1380,6 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private bool createGuildPopUpOpenProperty = false;
-
-        public bool CreateGuildPopUpOpenProperty
-        {
-            get
-            {
-                return createGuildPopUpOpenProperty;
-            }
-            set
-            {
-                if (value != createGuildPopUpOpenProperty)
-                {
-                    createGuildPopUpOpenProperty = value;
-                    NotifyPropertyChanged("CreateGuildPopUpOpenProperty");
-                }
-            }
-        }
-
         private bool joinGuildPopUpOpenProperty = false;
 
         public bool JoinGuildPopUpOpenProperty
@@ -1371,22 +1451,40 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private string useravatar = "/Assets/NoAvatarIcon.png";
+        private SolidColorBrush userStatusColor = new SolidColorBrush(Colors.MediumSpringGreen);
+
+        public SolidColorBrush UserStatusColor
+        {
+            get
+            {
+                return userStatusColor;
+            }
+            set
+            {
+                if (value != userStatusColor)
+                {
+                    userStatusColor = value;
+                    NotifyPropertyChanged("UserStatusColor");
+                }
+            }
+        }
+
+        private string userAvatar = "/Assets/NoAvatarIcon.png";
 
         public string UserAvatar
         {
             get
             {
-                return useravatar;
+                return userAvatar;
             }
             set
             {
-                if (value != useravatar)
+                if (value != userAvatar)
                 {
                     if (value == null)
-                        useravatar = "/Assets/NoAvatarIcon.png";
+                        userAvatar = "/Assets/NoAvatarIcon.png";
                     else
-                        useravatar = value;
+                        userAvatar = value;
                     NotifyPropertyChanged("UserAvatar");
                 }
             }

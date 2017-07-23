@@ -10,34 +10,31 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Discord_Mobile.ViewModels;
 using Windows.UI.Xaml;
+using Discord_Mobile.Services;
 
 namespace Discord_Mobile.Converters
 {
-    public class StatusToColorConverter : IValueConverter
+    public class UserToStatusColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            SolidColorBrush color;
-            switch (value)
+            //if (((SocketGuildUser)value).Id == LoginService.client.CurrentUser.Id)
+            //{
+            //    return new SolidColorBrush
+            //}
+            switch (((IUser)value).Status)
             {
-                case UserStatus.Offline:
-                    color = new SolidColorBrush(Colors.LightGray);
-                    break;
                 case UserStatus.Online:
-                    color = new SolidColorBrush(Colors.SpringGreen);
-                    break;
+                    return new SolidColorBrush(Colors.MediumSpringGreen);
                 case UserStatus.Idle:
                 case UserStatus.AFK:
-                    color = new SolidColorBrush(Colors.Orange);
-                    break;
+                    return new SolidColorBrush(Colors.DarkOrange);
                 case UserStatus.DoNotDisturb:
-                    color = new SolidColorBrush(Colors.Red);
-                    break;
+                    return new SolidColorBrush(Colors.Red);
+                case UserStatus.Offline:
                 default:
-                    color = new SolidColorBrush(Colors.LightGray);
-                    break;
+                    return new SolidColorBrush(Colors.LightGray);
             }
-            return color;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -74,13 +71,13 @@ namespace Discord_Mobile.Converters
             switch (fileExtention)
             {
                 case ".pdf":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/pdf-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/pdf-24.ico"));
                     break;
                 case ".csv":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/csv-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/csv-24.ico"));
                     break;
                 case ".txt":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/document-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/document-24.ico"));
                     break;
                 case ".xls":
                 case ".xlt":
@@ -94,7 +91,7 @@ namespace Discord_Mobile.Converters
                 case ".xlam":
                 case ".xll":
                 case ".xlw":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/exel-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/exel-24.ico"));
                     break;
                 case ".ppt":
                 case ".pot":
@@ -108,7 +105,7 @@ namespace Discord_Mobile.Converters
                 case ".ppsm":
                 case ".sldx":
                 case ".sldm":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/powerpoint-3-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/powerpoint-3-24.ico"));
                     break;
                 case ".doc":
                 case ".dot":
@@ -118,54 +115,54 @@ namespace Discord_Mobile.Converters
                 case ".dotx":
                 case ".dotm":
                 case ".docb":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/word-3-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/word-3-24.ico"));
                     break;
                 case ".avi":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/avi-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/avi-24.ico"));
                     break;
                 case ".flv":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/flv-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/flv-24.ico"));
                     break;
                 case ".mov":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mov-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/mov-24.ico"));
                     break;
                 case ".mpg":
                 case ".mpeg":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mpg-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/mpg-24.ico"));
                     break;
                 case ".dll":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/dll-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/dll-24.ico"));
                     break;
                 case ".exe":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/exe-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/exe-24.ico"));
                     break;
                 case ".psd":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/psd-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/psd-24.ico"));
                     break;
                 case ".gif":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/gif-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/gif-24.ico"));
                     break;
                 case ".jpg":
                 case ".jpeg":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/jpg-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/jpg-24.ico"));
                     break;
                 case ".png":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/png-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/png-24.ico"));
                     break;
                 case ".rar":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/rar-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/rar-24.ico"));
                     break;
                 case ".zip":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/zip-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/zip-24.ico"));
                     break;
                 case ".mp3":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/mp3-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/mp3-24.ico"));
                     break;
                 case ".wma":
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/wma-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/wma-24.ico"));
                     break;
                 default:
-                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/file-24.ico"));
+                    image = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/File Extentions/file-24.ico"));
                     break;
 
             }
@@ -179,7 +176,7 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    class AuthorToNameConverter : IValueConverter
+    class UserToNameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -189,10 +186,10 @@ namespace Discord_Mobile.Converters
 
                 if (value is RestUser)
                     usernickname = ((RestUser)value).Username;
-                else if (value is SocketSelfUser)
-                {
-                    usernickname = ((SocketSelfUser)value).Username;
-                }
+                else if (value is SocketSelfUser || value is SocketUser)
+                    usernickname = ((SocketUser)value).Username;
+                //else if (value is SocketUser)
+                //    usernickname = ((SocketUser)value).Username;
                 else
                 {
                     usernickname = ((SocketGuildUser)value).Nickname;
@@ -200,6 +197,10 @@ namespace Discord_Mobile.Converters
                     {
                         usernickname = ((SocketGuildUser)value).Username;
                     }
+                }
+                if (usernickname.Length >= 18)
+                {
+                    usernickname = usernickname.Substring(0, 17) + "...";
                 }
 
                 return usernickname;
@@ -214,63 +215,7 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    public class RecipientToColorConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            SolidColorBrush color;
-            switch (((IUser)value).Status)
-            {
-                case UserStatus.Online:
-                    color = new SolidColorBrush(Colors.SpringGreen);
-                    break;
-                case UserStatus.Idle:
-                    color = new SolidColorBrush(Colors.Orange);
-                    break;
-                case UserStatus.DoNotDisturb:
-                    color = new SolidColorBrush(Colors.Red);
-                    break;
-                default:
-                    color = new SolidColorBrush(Colors.Black);
-                    break;
-            }
-            return color;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class UserToNicknameOrUsernameConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            string name = "";
-
-            if (((SocketGuildUser)value).Nickname != null)
-                name = ((SocketGuildUser)value).Nickname;
-            else
-                name = ((SocketGuildUser)value).Username;
-
-
-            if (name.Length >= 18)
-            {
-                name = name.Substring(0, 17) + "...";
-            }
-
-            return name;
-
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class UserToColorConverter : IValueConverter
+    public class UserToUserColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -296,35 +241,6 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    public class AuthorToAvatarConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            BitmapImage image = new BitmapImage(new Uri("https://discordapp.com/assets/dd4dbc0016779df1378e7812eabaa04d.png"));
-            if (value != null)
-            {
-                string url;
-                if (value.GetType() == typeof(SocketGuildUser))
-                    url = ((SocketGuildUser)value).GetAvatarUrl();
-                else if (value.GetType() == typeof(RestUser))
-                    url = ((RestUser)value).GetAvatarUrl();
-                else if (value.GetType() == typeof(RestWebhookUser))
-                    url = ((RestWebhookUser)value).GetAvatarUrl();
-                else
-                    url = ((SocketSelfUser)value).GetAvatarUrl();
-
-                if (url != null)
-                    image = new BitmapImage(new Uri(url));
-            }
-            return image;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public class VoiceChannelToUsersCountConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -339,19 +255,6 @@ namespace Discord_Mobile.Converters
                     voicerUsersCount = voicerUsersCount + "\u221E";
             }
             return voicerUsersCount;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class RecipientToUsernameConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            return ((IUser)value).Username;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -403,6 +306,43 @@ namespace Discord_Mobile.Converters
         {
             return ((SocketVoiceChannel)value).Users;
 
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class NewGuildVoiceRegionToFlag : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null)
+            {
+                switch (((RestVoiceRegion)value).Name)
+                {
+                    case "Brazil":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Brazil.png"));
+                    case "Central Europe":
+                    case "Western Europe":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Europe.png"));
+                    case "Hong Kong":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Hong Kong.png"));
+                    case "Russia":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Russia.png"));
+                    case "Singapore":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Singapore.png"));
+                    case "US Central":
+                    case "US West":
+                    case "US South":
+                    case "US East":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/USA.png"));
+                    case "Syndey":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Australia.png"));
+                }
+            }
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
