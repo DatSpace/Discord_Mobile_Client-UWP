@@ -145,9 +145,9 @@
                                 </ListView>
                                 <Button BorderThickness="0" Background="Transparent" HorizontalAlignment="Stretch">
                                     <RelativePanel>
-                                        <Ellipse Name="AddChannelCircle" Width="40" Height="40" Fill="Transparent" StrokeDashArray="2.5" Stroke="#99AAB5" StrokeThickness="1"/>
-                                        <Line Stroke="#99AAB5" RelativePanel.AlignHorizontalCenterWith="AddChannelCircle" RelativePanel.AlignVerticalCenterWith="AddChannelCircle" X2="10"/>
-                                        <Line Stroke="#99AAB5" RelativePanel.AlignHorizontalCenterWith="AddChannelCircle" RelativePanel.AlignVerticalCenterWith="AddChannelCircle" Y2="10"/>
+                                        <Ellipse Name="CreatGuildCircle" Width="40" Height="40" Fill="Transparent" StrokeDashArray="2.5" Stroke="#99AAB5" StrokeThickness="1"/>
+                                        <Line Stroke="#99AAB5" RelativePanel.AlignHorizontalCenterWith="CreatGuildCircle" RelativePanel.AlignVerticalCenterWith="CreatGuildCircle" X2="10"/>
+                                        <Line Stroke="#99AAB5" RelativePanel.AlignHorizontalCenterWith="CreatGuildCircle" RelativePanel.AlignVerticalCenterWith="CreatGuildCircle" Y2="10"/>
                                     </RelativePanel>
                                     <Button.Flyout>
                                         <Flyout Placement="Full">
@@ -249,7 +249,32 @@
                                 <StackPanel>
                                     <StackPanel Margin="5,10,0,0" Orientation="Horizontal">
                                         <TextBlock Foreground="#99AAB5" FontWeight="Bold" FontSize="14" Text="TEXT CHANNELS"/>
-                                        <Button Visibility="{x:Bind ChatViewModel.HasModifyChannelPermission,Mode=OneWay}" Margin="5,0,0,0" Click="{x:Bind ChatViewModel.CreateChannelPopUpOpen}" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
+                                        <Button Visibility="{x:Bind ChatViewModel.HasModifyChannelPermission,Mode=OneWay}" Margin="5,0,0,0" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent">
+                                            <Button.Flyout>
+                                                <Flyout>
+                                                    <Flyout.FlyoutPresenterStyle>
+                                                        <Style TargetType="FlyoutPresenter">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                                                        </Style>
+                                                    </Flyout.FlyoutPresenterStyle>
+                                                    <Grid CornerRadius="4" Background="#1e2124">
+                                                        <StackPanel Margin="20">
+                                                            <TextBlock HorizontalAlignment="Center" Text="CREATE TEXT CHANNEL" FontSize="12" FontWeight="Bold" Foreground="#7289DA"/>
+                                                            <TextBlock Margin="0,10,0,0" FontSize="12" Foreground="#99AAB5" Text="Channel Name"/>
+                                                            <TextBox Width="200" MaxWidth="200" Margin="0,5,0,0" InputScope="ChatWithoutEmoji" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" BorderThickness="0"/>
+
+                                                            <Button HorizontalAlignment="Center" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateChannelPopUpCreate}">
+                                                                <Border Background="#7289DA" CornerRadius="2">
+                                                                    <TextBlock Foreground="#2C2F33" Margin="5" FontSize="16" Text="Create"/>
+                                                                </Border>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
                                     </StackPanel>
                                     <TextBlock Margin="10,5,0,10" FontSize="12" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
                                     <ListView ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemClick="{x:Bind ChatViewModel.SelectTextChannel}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.TextChannelsList, Mode=OneWay}">
@@ -344,7 +369,7 @@
                                         <ColumnDefinition Width="4*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <ListView Grid.ColumnSpan="2" ItemClick="{x:Bind ChatViewModel.ChangeUserStatus}" IsItemClickEnabled="True" SelectionMode="None">
+                                    <ListView ScrollViewer.VerticalScrollMode="Disabled" Grid.ColumnSpan="2" ItemClick="{x:Bind ChatViewModel.ChangeUserStatus}" IsItemClickEnabled="True" SelectionMode="None">
                                         <ListView.ItemContainerStyle>
                                             <Style TargetType="ListViewItem">
                                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -392,7 +417,7 @@
                                         </ListViewItem>
                                     </ListView>
                                     <TextBlock Margin="10" Grid.Row="1" Text="Playing:" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#99AAB5" FontSize="14"/>
-                                    <TextBox KeyUp="{x:Bind ChatViewModel.ChangeUserGameStatus}" Margin="10" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" PlaceholderText="Game playing..."/>
+                                    <TextBox KeyUp="{x:Bind ChatViewModel.ChangeUserGameStatus}" BorderThickness="0" Margin="10" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" PlaceholderText="Game playing..."/>
                                 </Grid>
                             </Flyout>
                         </Button.Flyout>
@@ -534,30 +559,6 @@
                 </Grid>
             </SplitView.Content>
         </SplitView>
-
-        <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.CreateChannelPopUpOpenProperty,Mode=OneWay}">
-            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
-                <Border CornerRadius="5" Background="#1e2124"/>
-                <StackPanel Margin="10">
-                    <TextBlock HorizontalAlignment="Center" Text="Create Text Channel" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <TextBox Margin="0,20,0,5" InputScope="ChatWithoutEmoji" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" PlaceholderText="..." BorderThickness="0"/>
-                    <TextBlock FontSize="10" Foreground="#99AAB5" Text="Please enter your channel's prefered name!"/>
-
-                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                        <Button BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateChannelPopUpCreate}">
-                            <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Create"/>
-                            </Border>
-                        </Button>
-                        <Button Click="{x:Bind ChatViewModel.CreateChannelPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="IndianRed" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
-                            </Border>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Popup>
 
         <Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
             <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">

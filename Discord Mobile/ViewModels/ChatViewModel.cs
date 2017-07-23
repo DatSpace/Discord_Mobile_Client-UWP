@@ -906,7 +906,6 @@ namespace Discord_Mobile.ViewModels
                 LoadingPopUpIsOpen = true;
                 NewChannelName = NewChannelName.Replace(" ", "_");
                 Guild.CreateTextChannelAsync(NewChannelName);
-                CreateChannelPopUpOpenProperty = false;
                 NewChannelName = "";
                 LoadingPopUpIsOpen = false;
             }
@@ -947,12 +946,6 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public void CreateChannelPopUpOpen(object sender, RoutedEventArgs e)
-        {
-            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
-            CreateChannelPopUpOpenProperty = true;
-        }
-
         public void GuildSettingsPopUpOpen(object sender, RoutedEventArgs e)
         {
             ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
@@ -962,12 +955,6 @@ namespace Discord_Mobile.ViewModels
         public void GuildSettingsPopUpCancel(object sender, RoutedEventArgs e)
         {
             GuildSettingsPopUpOpenProperty = false;
-        }
-
-        public void CreateChannelPopUpCancel(object sender, RoutedEventArgs e)
-        {
-
-            CreateChannelPopUpOpenProperty = false;
         }
 
         public void SetPopUpCenter(object sender, object e)
@@ -1358,60 +1345,6 @@ namespace Discord_Mobile.ViewModels
                 {
                     guildSettingsPopUpOpenProperty = value;
                     NotifyPropertyChanged("GuildSettingsPopUpOpenProperty");
-                }
-            }
-        }
-
-        private bool createChannelPopUpOpenProperty = false;
-
-        public bool CreateChannelPopUpOpenProperty
-        {
-            get
-            {
-                return createChannelPopUpOpenProperty;
-            }
-            set
-            {
-                if (value != createChannelPopUpOpenProperty)
-                {
-                    createChannelPopUpOpenProperty = value;
-                    NotifyPropertyChanged("CreateChannelPopUpOpenProperty");
-                }
-            }
-        }
-
-        private bool joinGuildPopUpOpenProperty = false;
-
-        public bool JoinGuildPopUpOpenProperty
-        {
-            get
-            {
-                return joinGuildPopUpOpenProperty;
-            }
-            set
-            {
-                if (value != joinGuildPopUpOpenProperty)
-                {
-                    joinGuildPopUpOpenProperty = value;
-                    NotifyPropertyChanged("JoinGuildPopUpOpenProperty");
-                }
-            }
-        }
-
-        private bool addGuildPopUpOpen = false;
-
-        public bool AddGuildPopUpOpen
-        {
-            get
-            {
-                return addGuildPopUpOpen;
-            }
-            set
-            {
-                if (value != addGuildPopUpOpen)
-                {
-                    addGuildPopUpOpen = value;
-                    NotifyPropertyChanged("AddGuildPopUpOpen");
                 }
             }
         }
