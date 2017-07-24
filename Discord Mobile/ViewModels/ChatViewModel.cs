@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using Discord_Mobile.Models;
 using Discord_Mobile.Services;
@@ -40,7 +41,8 @@ namespace Discord_Mobile.ViewModels
         private IDMChannel DMChannel;
         private Windows.Storage.Pickers.FileOpenPicker FilePicker = new Windows.Storage.Pickers.FileOpenPicker();
         private Stream PickedFileStream;
-        private Stream PickedImageStream;
+        private Stream NewGuildPickedIconStream;
+        private Stream EditGuildPickedIconStream;
         public static Windows.Storage.StorageFile PickedFile;
         private static Windows.Storage.StorageFile PickedImage;
         private RestVoiceRegion OptimalVoiceRegion;
@@ -103,8 +105,9 @@ namespace Discord_Mobile.ViewModels
             LoginService.client.MessageDeleted += MessageDeleted;
             LoginService.client.MessageUpdated += MessageEdited;
             LoginService.client.CurrentUserUpdated += UserUpdated;
-            LoginService.client.LeftGuild += JoinedGuild;
+            LoginService.client.LeftGuild += LeftGuild;
             LoginService.client.JoinedGuild += JoinedGuild;
+            LoginService.client.GuildUpdated += GuildUpdated;
             LoginService.client.ChannelCreated += ChannelCreated;
             LoginService.client.ChannelDestroyed += ChannelDestroyed;
             LoginService.client.UserJoined += UserJoined;
@@ -259,13 +262,33 @@ namespace Discord_Mobile.ViewModels
             });
         }
 
+        private async Task LeftGuild(SocketGuild arg)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                    GuildsList.Remove(arg);
+            });
+        }
+
         private async Task JoinedGuild(SocketGuild arg)
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                GuildsList.Clear();
-                foreach (SocketGuild guild in LoginService.client.Guilds)
-                    GuildsList.Add(guild);
+                GuildsList.Add(arg);
+            });
+        }
+
+        private async Task GuildUpdated(SocketGuild arg1, SocketGuild arg2)
+        {
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                GuildsList[GuildsList.IndexOf(arg2)] = arg2;
+                Guild = arg2;
+                GuildSelectedText = Guild.Name;
+                EditGuildServerRegion = LoginService.client.GetVoiceRegion(Guild.VoiceRegionId);
+                if (Guild.IconUrl != null)
+                    EditGuildIcon = new BitmapImage(new Uri(Guild.IconUrl));
+                EditGuildName = Guild.Name;
             });
         }
 
@@ -365,11 +388,11 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private async Task MessageReceived(SocketMessage arg)
+        private async Task MessageReceived(IMessage arg)
         {
             if (arg.Channel == DMChannel || arg.Channel == TextChannel)
             {
-                if (((IMessage)arg).Type == MessageType.Default)
+                if (arg.Type == MessageType.Default)
                 {
                     await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -446,7 +469,6 @@ namespace Discord_Mobile.ViewModels
                 Guild.DeleteAsync();
             else
                 Guild.LeaveAsync();
-            GuildSettingsPopUpOpenProperty = false;
 
             ClearGuild();
 
@@ -471,13 +493,18 @@ namespace Discord_Mobile.ViewModels
             GuildPermissions = Guild.CurrentUser.GuildPermissions;
             SetChannels();
             GuildSettingsButtonVisibility = Visibility.Visible;
+            HasEditGuildPermission = false;
+            if (GuildPermissions.ManageGuild)
+                HasEditGuildPermission = true;
             if (GuildPermissions.Administrator)
                 GuildSettingsLeaveDeleteText = "Delete \"" + Guild.Name + "\"";
             else
                 GuildSettingsLeaveDeleteText = "Leave \"" + Guild.Name + "\"";
-            HasModifyChannelPermission = Visibility.Collapsed;
+            EditGuildName = Guild.Name;
+            EditGuildServerRegion = LoginService.client.GetVoiceRegion(Guild.VoiceRegionId);
             ChannelsVisibility = Visibility.Visible;
             PrivateMessagesVisibility = Visibility.Collapsed;
+            HasModifyChannelPermission = Visibility.Collapsed;
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
             FilterUsersList(null, null);
@@ -550,10 +577,9 @@ namespace Discord_Mobile.ViewModels
             HasSendFilePermission = false;
             TextChannelPermissions = Guild.CurrentUser.GetPermissions(TextChannel);
             NumOfMessages = 30;
-            IEnumerable<IMessage> tempMessageList = await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
             MessageList.Clear();
             MessageListCopy.Clear();
-            foreach (var item in tempMessageList)
+            foreach (var item in await TextChannel.GetMessagesAsync(NumOfMessages).Flatten())
             {
                 MessageList.Insert(0, item);
                 MessageListCopy.Insert(0, item);
@@ -569,7 +595,7 @@ namespace Discord_Mobile.ViewModels
                 NoChannelVisibility = Visibility.Collapsed;
             else
                 NoChannelMessage = "No Messages...";
-            IEnumerable<IMessage> tempPinnedMessageList = await TextChannel.GetPinnedMessagesAsync();
+            IEnumerable<RestMessage> tempPinnedMessageList = await TextChannel.GetPinnedMessagesAsync();
             PinnedMessageList.Clear();
             foreach (var pinnedMessage in tempPinnedMessageList)
                 PinnedMessageList.Add(pinnedMessage);
@@ -579,8 +605,7 @@ namespace Discord_Mobile.ViewModels
         public async void LoadMoreMessages()
         {
             NumOfMessages += 30;
-            IEnumerable<IMessage> tempMessageList = (IEnumerable<IMessage>)await TextChannel.GetMessagesAsync(NumOfMessages).Flatten();
-            foreach (IMessage message in tempMessageList)
+            foreach (IMessage message in await TextChannel.GetMessagesAsync(NumOfMessages).Flatten())
             {
                 //Compare the unique message id's, otherwise it's not working!
                 if (!MessageList.Any(x => x.Id == message.Id))
@@ -643,6 +668,7 @@ namespace Discord_Mobile.ViewModels
             LoadingPopUpIsOpen = true;
 
             FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            FilePicker.FileTypeFilter.Clear();
             FilePicker.FileTypeFilter.Add("*");
             FilePicker.CommitButtonText = "Send File";
             if (PickedFile == null)
@@ -694,15 +720,14 @@ namespace Discord_Mobile.ViewModels
             HasSendMessagePermission = true;
             HasSendFilePermission = true;
             NumOfMessages = 30;
-            IEnumerable<IMessage> tempMessageList = await DMChannel.GetMessagesAsync(NumOfMessages).Flatten();
             MessageList.Clear();
             MessageListCopy.Clear();
-            foreach (var item in tempMessageList)
+            foreach (IMessage item in await DMChannel.GetMessagesAsync(NumOfMessages).Flatten())
             {
                 MessageList.Insert(0, item);
                 MessageListCopy.Insert(0, item);
             }
-            UsersSplitViewPaneOpen = !UsersSplitViewPaneOpen;
+            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
             TopMessage = DMChannel.Recipient.Username;
             NoChannelVisibility = Visibility.Visible;
             GroupedGuildUsers = null;
@@ -837,6 +862,7 @@ namespace Discord_Mobile.ViewModels
         public async void NewGuildChangeIcon(object sender, RoutedEventArgs e)
         {
             FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            FilePicker.FileTypeFilter.Clear();
             FilePicker.FileTypeFilter.Add(".jpg");
             FilePicker.FileTypeFilter.Add(".jpeg");
             FilePicker.FileTypeFilter.Add(".png");
@@ -850,15 +876,24 @@ namespace Discord_Mobile.ViewModels
                 var imageProperties = await PickedImage.Properties.GetImagePropertiesAsync();
                 if (imageProperties.Height >= 128 && imageProperties.Width >= 128)
                 {
-                    PickedImageStream = await PickedImage.OpenStreamForReadAsync();
-                    BitmapImage guildIcon = new BitmapImage();
-                    guildIcon.SetSource(PickedImageStream.AsRandomAccessStream());
-                    NewGuildIcon = guildIcon;
+                    if (((TextBlock)((StackPanel)((Border)((Button)sender).Content).Child).Children.Where(x => x is TextBlock).First()).Text == "Change Icon")
+                    {
+                        EditGuildPickedIconStream = await PickedImage.OpenStreamForReadAsync();
+                        BitmapImage guildIcon = new BitmapImage();
+                        guildIcon.SetSource(EditGuildPickedIconStream.AsRandomAccessStream());
+                        EditGuildIcon = guildIcon;
+                    }
+                    else
+                    {
+                        NewGuildPickedIconStream = await PickedImage.OpenStreamForReadAsync();
+                        BitmapImage guildIcon = new BitmapImage();
+                        guildIcon.SetSource(NewGuildPickedIconStream.AsRandomAccessStream());
+                        NewGuildIcon = guildIcon;
+                    }
                 }
                 else
                 {
                     PickedImage = null;
-                    PickedImageStream = null;
                 }
             }
 
@@ -875,7 +910,7 @@ namespace Discord_Mobile.ViewModels
 
         }
 
-        public void CreateGuildServerSelect(object sender, RoutedEventArgs e)
+        public void CreateGuildVoiceServerSelect(object sender, RoutedEventArgs e)
         {
             var selection = ((MenuFlyoutItem)sender).Text;
             foreach (RestVoiceRegion region in LoginService.client.VoiceRegions)
@@ -885,28 +920,58 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public async void CreateGuildPopUpCreate(object sender, RoutedEventArgs e)
+        public void EditGuildVoiceServerSelect(object sender, RoutedEventArgs e)
+        {
+            var selection = ((MenuFlyoutItem)sender).Text;
+            foreach (RestVoiceRegion region in LoginService.client.VoiceRegions)
+            {
+                if (region.Name == selection)
+                    EditGuildServerRegion = region;
+            }
+        }
+
+        public async void CreateGuild(object sender, RoutedEventArgs e)
         {
             if (NewGuildName.Trim() != "")
             {
                 NewGuildName = NewGuildName.Replace(" ", "_");
-                await LoginService.client.CreateGuildAsync(NewGuildName.Trim(), NewGuildServerRegion, PickedImageStream);
+                await LoginService.client.CreateGuildAsync(NewGuildName.Trim(), NewGuildServerRegion, NewGuildPickedIconStream);
                 NewGuildServerRegion = OptimalVoiceRegion;
                 NewGuildIcon = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/NoAvatarIcon.png"));
                 NewGuildName = "";
                 PickedImage = null;
-                PickedImageStream = null;
+                NewGuildPickedIconStream = null;
             }
         }
 
-        public void CreateChannelPopUpCreate(object sender, RoutedEventArgs e)
+        public async void EditGuild(object sender, RoutedEventArgs e)
         {
-            if (NewChannelName != "" && Guild != null)
+            if (EditGuildName.Trim() != "")
+            {
+                await Guild.ModifyAsync(properties => 
+                {
+                    properties.Icon = new Discord.Image(EditGuildPickedIconStream);
+                    properties.Name = EditGuildName.Trim();
+                    properties.Region = EditGuildServerRegion;
+                });
+
+                EditGuildServerRegion = LoginService.client.GetVoiceRegion(Guild.VoiceRegionId);
+                if (Guild.IconUrl != null)
+                    EditGuildIcon = new BitmapImage(new Uri(Guild.IconUrl));
+                EditGuildName = Guild.Name;
+                PickedImage = null;
+                EditGuildPickedIconStream = null;
+            }
+        }
+
+        public void CreateTextChannel(object sender, RoutedEventArgs e)
+        {
+            if (NewTextChannelName != "" && Guild != null)
             {
                 LoadingPopUpIsOpen = true;
-                NewChannelName = NewChannelName.Replace(" ", "_");
-                Guild.CreateTextChannelAsync(NewChannelName);
-                NewChannelName = "";
+                NewTextChannelName = NewTextChannelName.Replace(" ", "_");
+                Guild.CreateTextChannelAsync(NewTextChannelName);
+                NewTextChannelName = "";
                 LoadingPopUpIsOpen = false;
             }
         }
@@ -921,7 +986,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-            public async void ChangeUserStatus(object sender, ItemClickEventArgs e)
+        public async void ChangeUserStatus(object sender, ItemClickEventArgs e)
         {
             string statusSelected = ((TextBlock)((Grid)e.ClickedItem).Children.Where(x => x.GetType() == typeof(TextBlock)).First()).Text;
 
@@ -946,17 +1011,6 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public void GuildSettingsPopUpOpen(object sender, RoutedEventArgs e)
-        {
-            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
-            GuildSettingsPopUpOpenProperty = true;
-        }
-
-        public void GuildSettingsPopUpCancel(object sender, RoutedEventArgs e)
-        {
-            GuildSettingsPopUpOpenProperty = false;
-        }
-
         public void SetPopUpCenter(object sender, object e)
         {
             ScreenHorizontalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Width / 2) - (((Grid)sender).ActualWidth / 2));
@@ -979,6 +1033,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     newGuildIcon = value;
                     NotifyPropertyChanged("NewGuildIcon");
+                }
+            }
+        }
+
+        private BitmapImage editGuildIcon = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/NoAvatarIcon.png"));
+
+        public BitmapImage EditGuildIcon
+        {
+            get
+            {
+                return editGuildIcon;
+            }
+            set
+            {
+                if (value != editGuildIcon)
+                {
+                    editGuildIcon = value;
+                    NotifyPropertyChanged("EditGuildIcon");
                 }
             }
         }
@@ -1151,6 +1223,24 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
+        private bool hasEditGuildPermission = false;
+
+        public bool HasEditGuildPermission
+        {
+            get
+            {
+                return hasEditGuildPermission;
+            }
+            set
+            {
+                if (value != hasEditGuildPermission)
+                {
+                    hasEditGuildPermission = value;
+                    NotifyPropertyChanged("HasEditGuildPermission");
+                }
+            }
+        }
+
         private bool hasSendMessagePermission = false;
 
         public bool HasSendMessagePermission
@@ -1241,6 +1331,24 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
+        private RestVoiceRegion editGuildServerRegion;
+
+        public RestVoiceRegion EditGuildServerRegion
+        {
+            get
+            {
+                return editGuildServerRegion;
+            }
+            set
+            {
+                if (value != editGuildServerRegion)
+                {
+                    editGuildServerRegion = value;
+                    NotifyPropertyChanged("EditGuildServerRegion");
+                }
+            }
+        }
+
         private RestVoiceRegion newGuildServerRegion;
 
         public RestVoiceRegion NewGuildServerRegion
@@ -1255,6 +1363,24 @@ namespace Discord_Mobile.ViewModels
                 {
                     newGuildServerRegion = value;
                     NotifyPropertyChanged("NewGuildServerRegion");
+                }
+            }
+        }
+
+        private string editGuildName = "";
+
+        public string EditGuildName
+        {
+            get
+            {
+                return editGuildName;
+            }
+            set
+            {
+                if (value != editGuildName)
+                {
+                    editGuildName = value;
+                    NotifyPropertyChanged("EditGuildName");
                 }
             }
         }
@@ -1277,20 +1403,20 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private string newChannelName = "";
+        private string newTextChannelName = "";
 
-        public string NewChannelName
+        public string NewTextChannelName
         {
             get
             {
-                return newChannelName;
+                return newTextChannelName;
             }
             set
             {
-                if (value != newChannelName)
+                if (value != newTextChannelName)
                 {
-                    newChannelName = value;
-                    NotifyPropertyChanged("NewChannelName");
+                    newTextChannelName = value;
+                    NotifyPropertyChanged("NewTextChannelName");
                 }
             }
         }
@@ -1327,24 +1453,6 @@ namespace Discord_Mobile.ViewModels
                 {
                     screenVerticalCenter = value;
                     NotifyPropertyChanged("ScreenVerticalCenter");
-                }
-            }
-        }
-
-        private bool guildSettingsPopUpOpenProperty = false;
-
-        public bool GuildSettingsPopUpOpenProperty
-        {
-            get
-            {
-                return guildSettingsPopUpOpenProperty;
-            }
-            set
-            {
-                if (value != guildSettingsPopUpOpenProperty)
-                {
-                    guildSettingsPopUpOpenProperty = value;
-                    NotifyPropertyChanged("GuildSettingsPopUpOpenProperty");
                 }
             }
         }
@@ -1539,7 +1647,7 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public ObservableCollection<IMessage> PinnedMessageList = new ObservableCollection<IMessage>();
+        public ObservableCollection<RestMessage> PinnedMessageList = new ObservableCollection<RestMessage>();
         public ObservableCollection<IMessage> MessageList = new ObservableCollection<IMessage>();
         public static Collection<IMessage> MessageListCopy = new Collection<IMessage>();
 

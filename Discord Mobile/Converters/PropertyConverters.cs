@@ -314,31 +314,37 @@ namespace Discord_Mobile.Converters
         }
     }
 
-    public class NewGuildVoiceRegionToFlag : IValueConverter
+    public class GuildVoiceRegionToFlag : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value != null)
             {
-                switch (((RestVoiceRegion)value).Name)
+                switch (((RestVoiceRegion)value).Id)
                 {
-                    case "Brazil":
+                    case "brazil":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Brazil.png"));
-                    case "Central Europe":
-                    case "Western Europe":
+                    case "london":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/London.png"));
+                    case "amsterdam":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Amsterdam.png"));
+                    case "frankfurt":
+                        return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Frankfurt.png"));
+                    case "eu-central":
+                    case "eu-west":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Europe.png"));
-                    case "Hong Kong":
+                    case "hongkong":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Hong Kong.png"));
-                    case "Russia":
+                    case "russia":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Russia.png"));
-                    case "Singapore":
+                    case "singapore":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Singapore.png"));
-                    case "US Central":
-                    case "US West":
-                    case "US South":
-                    case "US East":
+                    case "us-central":
+                    case "us-west":
+                    case "us-south":
+                    case "us-east":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/USA.png"));
-                    case "Syndey":
+                    case "sydney":
                         return new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/Flags/Australia.png"));
                 }
             }

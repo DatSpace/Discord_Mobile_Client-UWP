@@ -134,10 +134,13 @@
     <Content Include="Assets\File Extentions\exe-24.ico" />
     <Content Include="Assets\File Extentions\exel-24.ico" />
     <Content Include="Assets\File Extentions\file-24.ico" />
+    <Content Include="Assets\Flags\Amsterdam.png" />
     <Content Include="Assets\Flags\Australia.png" />
     <Content Include="Assets\Flags\Brazil.png" />
     <Content Include="Assets\Flags\Europe.png" />
+    <Content Include="Assets\Flags\Frankfurt.png" />
     <Content Include="Assets\Flags\Hong Kong.png" />
+    <Content Include="Assets\Flags\London.png" />
     <Content Include="Assets\Flags\Russia.png" />
     <Content Include="Assets\Flags\Singapore.png" />
     <Content Include="Assets\Flags\USA.png" />

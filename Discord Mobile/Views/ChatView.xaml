@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:disc="using:Discord"
     xmlns:discweb="using:Discord.WebSocket"
+    xmlns:discrest="using:Discord.Rest"
     xmlns:conv="using:Discord_Mobile.Converters"
     xmlns:vm="using:Discord_Mobile.ViewModels"
     xmlns:toolkit="using:Microsoft.Toolkit.Uwp.UI.Controls"
@@ -27,7 +28,7 @@
         <conv:FileNameExtentionToFileIconConverter x:Key="FileNameExtentionToFileIconConverter"/>
         <conv:MessageToMessageInfoVisibilityConverter x:Key="MessageToMessageInfoVisibilityConverter"/>
         <conv:VoiceChannelToVoiceChannelUsers x:Key="VoiceChannelToVoiceChannelUsers"/>
-        <conv:NewGuildVoiceRegionToFlag x:Key="NewGuildVoiceRegionToFlag"/>
+        <conv:GuildVoiceRegionToFlag x:Key="GuildVoiceRegionToFlag"/>
         <vm:ChatViewModel x:Name="ChatViewModel"/>
         <vm:SettingsViewModel x:Name="SettingsViewModel"/>
         <CollectionViewSource x:Name="GroupedGuildUsersViewSource" Source="{x:Bind ChatViewModel.GroupedGuildUsers, Mode=OneWay}" IsSourceGrouped="True"/>
@@ -70,7 +71,7 @@
                                     </Style>
                                 </ListView.ItemContainerStyle>
                                 <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="disc:IMessage">
+                                    <DataTemplate x:DataType="discrest:RestMessage">
                                         <Grid Margin="0,5,0,5">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="50"/>
@@ -170,17 +171,20 @@
                                                     <Button Margin="5,0,0,0" Background="Transparent" BorderThickness="0">
                                                         <Button.Flyout>
                                                             <MenuFlyout Placement="Left">
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Tag="Test" Text="Brazil"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Central Europe"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Hong Kong"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Russia"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Singapore"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Sydney"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US Central"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US East"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US South"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="US West"/>
-                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildServerSelect}" Text="Western Europe"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Tag="Test" Text="Brazil"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Central Europe"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="London"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Amsterdam"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Frankfurt"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Hong Kong"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Russia"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Singapore"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Sydney"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="US Central"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="US East"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="US South"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="US West"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.CreateGuildVoiceServerSelect}" Text="Western Europe"/>
                                                             </MenuFlyout>
                                                         </Button.Flyout>
                                                         <Grid CornerRadius="2" BorderBrush="#99AAB5" BorderThickness="1">
@@ -189,7 +193,7 @@
                                                                 <ColumnDefinition Width="*"/>
                                                             </Grid.ColumnDefinitions>
                                                             <StackPanel Margin="5" Orientation="Horizontal">
-                                                                <Image Width="30" Height="30" Source="{x:Bind ChatViewModel.NewGuildServerRegion, Mode=OneWay, Converter={StaticResource NewGuildVoiceRegionToFlag}}"/>
+                                                                <Image Width="30" Height="30" Source="{x:Bind ChatViewModel.NewGuildServerRegion, Mode=OneWay, Converter={StaticResource GuildVoiceRegionToFlag}}"/>
                                                                 <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Foreground="#99AAB5" Text="{x:Bind ChatViewModel.NewGuildServerRegion.Name, Mode=OneWay}"/>
                                                             </StackPanel>
                                                             <Border Margin="5" BorderThickness="1,0,0,0" BorderBrush="#99AAB5" Grid.Column="1">
@@ -202,7 +206,7 @@
                                                 <Button Click="{x:Bind ChatViewModel.NewGuildChangeIcon}" Margin="0,20,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="Transparent">
                                                     <Border BorderThickness="1" BorderBrush="#99AAB5" CornerRadius="2">
                                                         <StackPanel Margin="10">
-                                                            <TextBlock HorizontalAlignment="Center" Text="Change Icon" FontSize="14" Foreground="#99AAB5"/>
+                                                            <TextBlock HorizontalAlignment="Center" Text="Add Icon" FontSize="14" Foreground="#99AAB5"/>
                                                             <Ellipse Margin="0,10,0,0" Width="128" Height="128">
                                                                 <Ellipse.Fill>
                                                                     <ImageBrush ImageSource="{x:Bind ChatViewModel.NewGuildIcon, Mode=OneWay}"/>
@@ -212,7 +216,7 @@
                                                         </StackPanel>
                                                     </Border>
                                                 </Button>
-                                                <Button Margin="0,20,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateGuildPopUpCreate}">
+                                                <Button Margin="0,20,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateGuild}">
                                                     <Border Background="#7289DA" CornerRadius="2">
                                                         <TextBlock Foreground="#2C2F33" Margin="5" FontSize="26" Text="Create"/>
                                                     </Border>
@@ -241,7 +245,84 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Margin="5" TextAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind ChatViewModel.GuildSelectedText, Mode=OneWay}" Foreground="White" FontWeight="Bold" FontSize="14" />
-                                <Button Visibility="{x:Bind ChatViewModel.GuildSettingsButtonVisibility, Mode=OneWay}" Click="{x:Bind ChatViewModel.GuildSettingsPopUpOpen}" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="14" Content="&#xE713;"/>
+                                <Button Visibility="{x:Bind ChatViewModel.GuildSettingsButtonVisibility, Mode=OneWay}" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="14" Content="&#xE713;">
+                                    <Button.Flyout>
+                                        <Flyout Placement="Full">
+                                            <Flyout.FlyoutPresenterStyle>
+                                                <Style TargetType="FlyoutPresenter">
+                                                    <Setter Property="Background" Value="#1e2124"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                                                </Style>
+                                            </Flyout.FlyoutPresenterStyle>
+                                            <StackPanel>
+                                                <TextBlock HorizontalAlignment="Center" Text="SERVER SETTINGS" FontSize="14" FontWeight="Bold" Foreground="#7289DA"/>
+
+                                                <TextBlock Margin="0,10,0,0" Text="Edit Server Name:" Foreground="#99AAB5"/>
+                                                <TextBox IsEnabled="{x:Bind ChatViewModel.HasEditGuildPermission}" Margin="0,10,0,0" InputScope="ChatWithoutEmoji" BorderThickness="0" PlaceholderText="Enter a server name:" Text="{x:Bind ChatViewModel.EditGuildName,Mode=TwoWay}"/>
+
+                                                <StackPanel HorizontalAlignment="Center" Margin="0,20,0,0" Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center" Text="Edit Server Region:" Foreground="#99AAB5"/>
+                                                    <Button IsEnabled="{x:Bind ChatViewModel.HasEditGuildPermission}" Margin="5,0,0,0" Background="Transparent" BorderThickness="0">
+                                                        <Button.Flyout>
+                                                            <MenuFlyout Placement="Left">
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Tag="Test" Text="Brazil"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Central Europe"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="London"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Amsterdam"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Frankfurt"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Hong Kong"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Russia"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Singapore"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Sydney"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="US Central"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="US East"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="US South"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="US West"/>
+                                                                <MenuFlyoutItem Click="{x:Bind ChatViewModel.EditGuildVoiceServerSelect}" Text="Western Europe"/>
+                                                            </MenuFlyout>
+                                                        </Button.Flyout>
+                                                        <Grid CornerRadius="2" BorderBrush="#99AAB5" BorderThickness="1">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="3*"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel Margin="5" Orientation="Horizontal">
+                                                                <Image Width="30" Height="30" Source="{x:Bind ChatViewModel.EditGuildServerRegion, Mode=OneWay, Converter={StaticResource GuildVoiceRegionToFlag}}"/>
+                                                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Foreground="#99AAB5" Text="{x:Bind ChatViewModel.EditGuildServerRegion.Name, Mode=OneWay}"/>
+                                                            </StackPanel>
+                                                            <Border Margin="5" BorderThickness="1,0,0,0" BorderBrush="#99AAB5" Grid.Column="1">
+                                                                <TextBlock Margin="5,0,0,0" Text="Change" Foreground="#99AAB5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Button>
+                                                </StackPanel>
+                                                <Button IsEnabled="{x:Bind ChatViewModel.HasEditGuildPermission}" Click="{x:Bind ChatViewModel.NewGuildChangeIcon}" Margin="0,20,0,0" HorizontalAlignment="Center" BorderThickness="0" Background="Transparent">
+                                                    <Border BorderThickness="1" BorderBrush="#99AAB5" CornerRadius="2">
+                                                        <StackPanel Margin="10">
+                                                            <TextBlock HorizontalAlignment="Center" Text="Change Icon" FontSize="14" Foreground="#99AAB5"/>
+                                                            <Ellipse Margin="0,10,0,0" Width="128" Height="128">
+                                                                <Ellipse.Fill>
+                                                                    <ImageBrush ImageSource="{x:Bind ChatViewModel.EditGuildIcon, Mode=OneWay}"/>
+                                                                </Ellipse.Fill>
+                                                            </Ellipse>
+                                                            <TextBlock HorizontalAlignment="Center" Text="Minimum Size: 128x128" Foreground="#99AAB5" FontSize="10"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Button>
+
+                                                <StackPanel HorizontalAlignment="Center" Margin="0,20,0,0" Orientation="Horizontal">
+                                                    <Button Click="{x:Bind ChatViewModel.DisplayLeaveGuildDialog}" Background="DarkRed" Foreground="#99AAB5" Content="{x:Bind ChatViewModel.GuildSettingsLeaveDeleteText,Mode=OneWay}" />
+                                                    <Button IsEnabled="{x:Bind ChatViewModel.HasEditGuildPermission}" Click="{x:Bind ChatViewModel.EditGuild}" BorderThickness="0" Background="Transparent">
+                                                        <Border Background="#7289DA" CornerRadius="2">
+                                                            <TextBlock Foreground="#2C2F33" Margin="5" FontSize="16" Text="Save Changes"/>
+                                                        </Border>
+                                                    </Button>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
                             </Grid>
 
                             <Border Grid.Row="1" Background="#2e3136"/>
@@ -261,11 +342,11 @@
                                                     </Flyout.FlyoutPresenterStyle>
                                                     <Grid CornerRadius="4" Background="#1e2124">
                                                         <StackPanel Margin="20">
-                                                            <TextBlock HorizontalAlignment="Center" Text="CREATE TEXT CHANNEL" FontSize="12" FontWeight="Bold" Foreground="#7289DA"/>
+                                                            <TextBlock HorizontalAlignment="Center" Text="CREATE TEXT CHANNEL" FontSize="14" FontWeight="Bold" Foreground="#7289DA"/>
                                                             <TextBlock Margin="0,10,0,0" FontSize="12" Foreground="#99AAB5" Text="Channel Name"/>
-                                                            <TextBox Width="200" MaxWidth="200" Margin="0,5,0,0" InputScope="ChatWithoutEmoji" Text="{x:Bind ChatViewModel.NewChannelName,Mode=TwoWay}" BorderThickness="0"/>
+                                                            <TextBox Width="200" MaxWidth="200" Margin="0,5,0,0" InputScope="ChatWithoutEmoji" Text="{x:Bind ChatViewModel.NewTextChannelName,Mode=TwoWay}" BorderThickness="0"/>
 
-                                                            <Button HorizontalAlignment="Center" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateChannelPopUpCreate}">
+                                                            <Button HorizontalAlignment="Center" Margin="0,10,0,0" BorderThickness="0" Background="Transparent" Click="{x:Bind ChatViewModel.CreateTextChannel}">
                                                                 <Border Background="#7289DA" CornerRadius="2">
                                                                     <TextBlock Foreground="#2C2F33" Margin="5" FontSize="16" Text="Create"/>
                                                                 </Border>
@@ -610,29 +691,6 @@
                 <TextBlock Text="Loading data..." Foreground="#99AAB5" FontWeight="Bold" FontSize="22" VerticalAlignment="Center" />
             </StackPanel>
         </toolkit:Loading>
-
-        <Popup Opacity="0.98" Grid.Row="1" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.GuildSettingsPopUpOpenProperty,Mode=OneWay}">
-            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
-                <Border CornerRadius="5" Background="#1e2124"/>
-                <StackPanel Margin="10">
-                    <TextBlock HorizontalAlignment="Center" Text="Guild Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <Button Margin="0,20,0,0" Click="{x:Bind ChatViewModel.DisplayLeaveGuildDialog}" HorizontalAlignment="Center" Foreground="White" Content="{x:Bind ChatViewModel.GuildSettingsLeaveDeleteText,Mode=OneWay}" />
-
-                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                        <Button BorderThickness="0" Background="Transparent">
-                            <Border Background="#7289DA" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Save Changes"/>
-                            </Border>
-                        </Button>
-                        <Button Click="{x:Bind ChatViewModel.GuildSettingsPopUpCancel}" BorderThickness="0" Margin="10,0,0,0" Background="Transparent">
-                            <Border Background="IndianRed" CornerRadius="2">
-                                <TextBlock Margin="5" FontSize="16" Text="Cancel"/>
-                            </Border>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Popup>
 
         <Border Grid.Row="2" Background="#99AAB5"/>
         <Button IsEnabled="{x:Bind ChatViewModel.HasSendFilePermission,Mode=OneWay}" Grid.Row="2" Background="Transparent" BorderThickness="0" VerticalAlignment="Stretch" HorizontalAlignment="Left" Foreground="{x:Bind ChatViewModel.AttachmentColorString,Mode=OneWay}" FontSize="24" Click="{x:Bind ChatViewModel.FileButtonClicked}" Content="{x:Bind ChatViewModel.AttachmentIconString,Mode=OneWay}" FontFamily="Segoe MDL2 Assets"/>
