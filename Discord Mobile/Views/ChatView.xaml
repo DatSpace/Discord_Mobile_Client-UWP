@@ -373,7 +373,7 @@
                                         <Button Visibility="{x:Bind ChatViewModel.HasModifyChannelPermission,Mode=OneWay}" Margin="5,0,0,0" FontSize="8" BorderThickness="0" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Foreground="#99AAB5" Background="Transparent"/>
                                     </StackPanel>
                                     <TextBlock Margin="10,5,0,10" FontSize="12" Foreground="#99AAB5" Text="No server selected!" Visibility="{x:Bind ChatViewModel.NoGuildVisibility,Mode=OneWay}"/>
-                                    <ListView ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemClick="{x:Bind ChatViewModel.SelectVoiceChannel}" IsItemClickEnabled="True" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}">
+                                    <ListView ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" IsItemClickEnabled="False" ItemsSource="{x:Bind ChatViewModel.VoiceChannelsList, Mode=OneWay}">
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="discweb:SocketVoiceChannel">
                                                 <StackPanel>
@@ -503,7 +503,57 @@
                             </Flyout>
                         </Button.Flyout>
                     </Button>
-                    <Button Grid.Row="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent" Foreground="White" Click="{x:Bind ChatViewModel.SettingsPopUpOpen}" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="16" Content="&#xE713;"/>
+                    <Button Click="{x:Bind SettingsViewModel.Initialize}" Grid.Row="1" HorizontalAlignment="Right" BorderThickness="0" Background="Transparent" Foreground="White" Margin="0,0,10,0" FontFamily="Segoe MDL2 Assets" FontSize="16" Content="&#xE713;">
+                        <Button.Flyout>
+                            <Flyout Placement="Full">
+                                <Flyout.FlyoutPresenterStyle>
+                                    <Style TargetType="FlyoutPresenter">
+                                        <Setter Property="Background" Value="#1e2124"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>
+                                <StackPanel>
+
+                                    <TextBlock HorizontalAlignment="Center" Text="USER SETTINGS" FontSize="14" FontWeight="Bold" Foreground="#7289DA"/>
+                                    <Button Margin="0,20,0,0" Click="{x:Bind SettingsViewModel.Disconnect}" HorizontalAlignment="Center" Background="DarkRed" Foreground="#99AAB5" Content="Disconnect" />
+
+                                    <Grid Margin="0,20,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="Sound Notifications:" Foreground="#99AAB5" HorizontalAlignment="Left"/>
+                                        <ToggleSwitch Margin="10,0,0,0" Grid.Column="1" Foreground="#99AAB5" IsOn="{x:Bind SettingsViewModel.EnableSounds,Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="1" Margin="10,10,0,0" Text="Change Username:" VerticalAlignment="Center" Foreground="#99AAB5" HorizontalAlignment="Left"/>
+                                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
+                                            <TextBox IsEnabled="{x:Bind SettingsViewModel.IsUsernameEditable, Mode=OneWay}" Text="{x:Bind SettingsViewModel.EditedUsername, Mode=TwoWay}" VerticalAlignment="Center" PlaceholderText="Edit your username..." BorderThickness="0"/>
+                                            <Button Content="&#xE70F;" Click="{x:Bind SettingsViewModel.EnableEditUsernameTextbox}" VerticalAlignment="Center" FontSize="18" Background="Transparent" Foreground="White" FontFamily="Segoe MDL2 Assets"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <StackPanel Margin="5,10,0,0">
+                                        <Button Content="Rate me" Background="#7289DA" Foreground="#2C2F33"/>
+                                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                            <TextBlock Text="Version Number:" FontSize="12" Foreground="#99AAB5"/>
+                                            <TextBlock Margin="10,0,0,0" FontSize="12" Text="{x:Bind SettingsViewModel.Version}" Foreground="#99AAB5"/>
+                                        </StackPanel>
+                                        <Button HorizontalAlignment="Center" Click="{x:Bind SettingsViewModel.EditUser}" BorderThickness="0" Background="Transparent">
+                                            <Border Background="#7289DA" CornerRadius="2">
+                                                <TextBlock Foreground="#2C2F33" Margin="5" FontSize="16" Text="Save Settings"/>
+                                            </Border>
+                                        </Button>
+                                    </StackPanel>
+
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
                 </Grid>
             </SplitView.Pane>
             <SplitView.Content>
@@ -641,51 +691,7 @@
             </SplitView.Content>
         </SplitView>
 
-        <Popup Opacity="0.98" Grid.Row="1" IsLightDismissEnabled="True" HorizontalOffset="{x:Bind ChatViewModel.ScreenHorizontalCenter,Mode=OneWay}" VerticalOffset="{x:Bind ChatViewModel.ScreenVerticalCenter,Mode=OneWay}" IsOpen="{x:Bind ChatViewModel.SettingsPopUpOpenProperty,Mode=TwoWay}">
-            <Grid SizeChanged="{x:Bind ChatViewModel.SetPopUpCenter}" MinWidth="250">
-                <Border CornerRadius="5" Background="#1e2124"/>
-                <StackPanel Margin="10">
-
-                    <TextBlock HorizontalAlignment="Center" Text="Settings" FontSize="18" FontWeight="Bold" Foreground="#99AAB5"/>
-                    <Button Margin="0,20,0,0" Click="{x:Bind SettingsViewModel.Disconnect}" HorizontalAlignment="Center" Foreground="White" Content="Disconnect Me!" />
-                    <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="WrapWholeWords" Foreground="Red">
-                        Warning!!!
-                        <LineBreak/>
-                        The saved token will be deleted!
-                    </TextBlock>
-                    <Grid Margin="0,20,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Text="Sound Notifications:" Foreground="White" HorizontalAlignment="Left"/>
-                        <ToggleSwitch Margin="10,0,0,0" Grid.Column="1" Foreground="White" IsOn="{x:Bind SettingsViewModel.EnableSounds,Mode=TwoWay}"/>
-
-                        <TextBlock Visibility="Collapsed" Grid.Row="1" Margin="10,10,0,0" Text="Change Username:" VerticalAlignment="Center" Foreground="White" HorizontalAlignment="Left"/>
-                        <StackPanel Visibility="Collapsed" Margin="0,10,0,0" Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
-                            <TextBox IsEnabled="False" HorizontalAlignment="Center" MinWidth="120" VerticalAlignment="Center" PlaceholderText="USERNAME" Foreground="White"/>
-                            <Button Content="&#xE70F;" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" Foreground="White" FontFamily="Segoe MDL2 Assets"/>
-                        </StackPanel>
-                    </Grid>
-                    <StackPanel Margin="5,10,0,0">
-                        <Button Content="Rate Me" Foreground="LightGray" FontSize="18"/>
-                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                            <TextBlock Text="Version Number:" FontSize="12" Foreground="White"/>
-                            <TextBlock Margin="10,0,0,0" FontSize="12" Text="{x:Bind SettingsViewModel.Version}" Foreground="White"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                </StackPanel>
-            </Grid>
-        </Popup>
-
-
-        <toolkit:Loading Grid.RowSpan="2" Background="#141414" Opacity="0.8" IsLoading="{x:Bind ChatViewModel.LoadingPopUpIsOpen, Mode=OneWay}">
+        <toolkit:Loading Grid.RowSpan="2" Background="#141414" Opacity="0.8" IsLoading="{x:Bind ChatViewModel.LoadingControlIsOpen, Mode=OneWay}">
             <StackPanel Padding="12">
                 <ProgressRing Margin="0,0,8,0" IsActive="True" Width="50" Height="50" Foreground="#99AAB5" />
                 <TextBlock Text="Loading data..." Foreground="#99AAB5" FontWeight="Bold" FontSize="22" VerticalAlignment="Center" />

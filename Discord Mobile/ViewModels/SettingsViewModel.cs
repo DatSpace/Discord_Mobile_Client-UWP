@@ -1,4 +1,5 @@
 ﻿using Discord_Mobile.Services;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.ApplicationModel;
@@ -21,15 +22,45 @@ namespace Discord_Mobile.ViewModels
 
         private Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
 
-        public void Disconnect()
+        public void Initialize(object sender, RoutedEventArgs e)
         {
-            LoginService.DeleteUser();
-
-            LoginService.client.LogoutAsync();
-
-            Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(LoginView));
+            EditedUsername = LoginService.client.CurrentUser.Username;
         }
+
+        public async void Disconnect()
+        {
+            ContentDialog DisconnectDialog = new ContentDialog
+            {
+                Title = "Are you sure ?",
+                Content = "Be aware, the saved token will be lost!",
+                PrimaryButtonText = "Disconnect",
+                CloseButtonText = "It was an accident",
+                DefaultButton = ContentDialogButton.Close
+            };
+            ContentDialogResult result = await DisconnectDialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                LoginService.DeleteUser();
+
+                await LoginService.client.LogoutAsync();
+
+                Frame rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(LoginView));
+            }
+        }
+        
+        public void EnableEditUsernameTextbox(object sender, RoutedEventArgs e)
+        {
+            IsUsernameEditable = true;
+        }
+
+        public async void EditUser(object sender, RoutedEventArgs e)
+        {
+            await LoginService.client.CurrentUser.ModifyAsync(selfUserProperties => { selfUserProperties.Username = EditedUsername; });
+        }
+
+        //#########################################################################################
 
         public string Version
         {
@@ -40,6 +71,42 @@ namespace Discord_Mobile.ViewModels
                     Package.Current.Id.Version.Minor,
                     Package.Current.Id.Version.Build,
                     Package.Current.Id.Version.Revision);
+            }
+        }
+
+        private bool isUsernameEditable = false;
+
+        public bool IsUsernameEditable
+        {
+            get
+            {
+                return isUsernameEditable;
+            }
+            set
+            {
+                if (value != isUsernameEditable)
+                {
+                    isUsernameEditable = value;
+                    NotifyPropertyChanged("IsUsernameEditable");
+                }
+            }
+        }
+
+        private string editedUsername = "";
+
+        public string EditedUsername
+        {
+            get
+            {
+                return editedUsername;
+            }
+            set
+            {
+                if (value != editedUsername)
+                {
+                    editedUsername = value;
+                    NotifyPropertyChanged("EditedUsername");
+                }
             }
         }
 

@@ -7,9 +7,9 @@
     xmlns:vm="using:Discord_Mobile.ViewModels"
     mc:Ignorable="d">
 
-    <Page.DataContext>
+    <Page.Resources>
         <vm:LoginViewModel x:Name="LoginViewModel"/>
-    </Page.DataContext>
+    </Page.Resources>
 
     <Grid Background="#2C2F33">
         <Grid.RowDefinitions>
@@ -22,8 +22,8 @@
                 <TextBox  IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Text="{x:Bind LoginViewModel.TokenTextBox, Mode=TwoWay}" PlaceholderText="Enter your user Token here..."/>
                 <StackPanel Margin="0,10,0,0">
                     <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                        <Button IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Click="{x:Bind LoginViewModel.UserLogin}" Background="#7289DA" Content="Login"/>
-                        <CheckBox Background="White" IsEnabled="{x:Bind  LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Content="Remember Me?" IsChecked="{x:Bind LoginViewModel.RememberMeIsChecked,Mode=TwoWay}" Margin="20,0,0,0"/>
+                        <Button BorderThickness="0" IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Click="{x:Bind LoginViewModel.ManualLogin}" Background="#7289DA" Content="Login"/>
+                        <CheckBox Background="White" IsEnabled="{x:Bind LoginViewModel.LoginButtonIsEnabled, Mode=OneWay}" Content="Remember Me?" IsChecked="{x:Bind LoginViewModel.RememberMeIsChecked,Mode=TwoWay}" Margin="20,0,0,0"/>
                     </StackPanel>
                     <TextBlock HorizontalAlignment="Center" TextWrapping="WrapWholeWords" Text="{x:Bind LoginViewModel.ConnectionErrorTextBlock, Mode=OneWay}" Foreground="Crimson" FontWeight="Bold" FontSize="14"/>
                 </StackPanel>
@@ -48,8 +48,8 @@
                 </StackPanel>
             </StackPanel>
         </StackPanel>
-        <StackPanel Visibility="{x:Bind LoginViewModel.connectingVisibility, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Image Margin="10,0,0,10" Source="/Assets/Square150x150Logo.png" Stretch="None" Loaded="{x:Bind LoginViewModel.UserLogin, Mode=OneTime}"/>
+        <StackPanel Visibility="{x:Bind LoginViewModel.ConnectingVisibility, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image Margin="10,0,0,10" Source="/Assets/Square150x150Logo.png" Stretch="None" Loaded="{x:Bind LoginViewModel.AutoLogin, Mode=OneTime}"/>
             <TextBlock Margin="30,0,0,10" FontSize="24" Text="{x:Bind LoginViewModel.LoginStatusTextBlock, Mode=OneWay}" FontStyle="Italic" FontWeight="Bold" Foreground="#7289DA"/>
             <ProgressRing Name="LoadingRing" Width="50" Height="50" IsActive="True"/>
         </StackPanel>

@@ -16,7 +16,6 @@ using Windows.Networking.Connectivity;
 using Windows.System.Threading;
 using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -33,7 +32,6 @@ namespace Discord_Mobile.ViewModels
         private Windows.Storage.ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         public static SocketGuild Guild;
         private SocketTextChannel TextChannel;
-        private static SocketVoiceChannel VoiceChannel;
         private Collection<UsersTyping> UsersTypingCollection = new Collection<UsersTyping>();
         private SocketSelfUser User;
         private GuildPermissions GuildPermissions;
@@ -46,7 +44,6 @@ namespace Discord_Mobile.ViewModels
         public static Windows.Storage.StorageFile PickedFile;
         private static Windows.Storage.StorageFile PickedImage;
         private RestVoiceRegion OptimalVoiceRegion;
-        //private ChannelPermissions VoiceChannelPermissions;
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
@@ -98,7 +95,7 @@ namespace Discord_Mobile.ViewModels
                 while (GuildsLoadedNumber < GuildsList.Count)
                 {
                 }
-                LoadingPopUpIsOpen = false;
+                LoadingControlIsOpen = false;
             });
 
             LoginService.client.MessageReceived += MessageReceived;
@@ -433,7 +430,6 @@ namespace Discord_Mobile.ViewModels
 
                 Guild = null;
                 TextChannel = null;
-                VoiceChannel = null;
                 GuildSettingsButtonVisibility = Visibility.Collapsed;
                 HasSendMessagePermission = false;
                 TopMessage = "Discord Mobile Client";
@@ -463,7 +459,7 @@ namespace Discord_Mobile.ViewModels
 
         private void LeaveGuild()
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
 
             if (GuildPermissions.Administrator)
                 Guild.DeleteAsync();
@@ -481,12 +477,12 @@ namespace Discord_Mobile.ViewModels
             HasModifyChannelPermission = Visibility.Collapsed;
             HasSendMessagePermission = false;
 
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public void SelectGuild(object sender, ItemClickEventArgs e)
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
             Guild = (SocketGuild)e.ClickedItem;
             NoGuildVisibility = Visibility.Collapsed;
             GuildSelectedText = Guild.Name;
@@ -508,7 +504,7 @@ namespace Discord_Mobile.ViewModels
             if (GuildPermissions.ManageChannels)
                 HasModifyChannelPermission = Visibility.Visible;
             FilterUsersList(null, null);
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public void FilterUsersList(object sender, TextChangedEventArgs e)
@@ -571,7 +567,7 @@ namespace Discord_Mobile.ViewModels
 
         public async Task SelectTextChannel(object sender, ItemClickEventArgs e)
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
             TextChannel = (SocketTextChannel)e.ClickedItem;
             HasSendMessagePermission = false;
             HasSendFilePermission = false;
@@ -599,7 +595,7 @@ namespace Discord_Mobile.ViewModels
             PinnedMessageList.Clear();
             foreach (var pinnedMessage in tempPinnedMessageList)
                 PinnedMessageList.Add(pinnedMessage);
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public async void LoadMoreMessages()
@@ -616,26 +612,9 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public async Task SelectVoiceChannel(object sender, ItemClickEventArgs e)
-        {
-            VoiceChannel = (SocketVoiceChannel)e.ClickedItem;
-
-            //await Task.Run(() => VoiceService.Initialize(VoiceChannel));
-
-            //if (VoiceChannelPermissions.Speak)
-            //{
-            //}
-        }
-
-        public void SettingsPopUpOpen()
-        {
-            ChannelsSplitViewPaneOpen = !ChannelsSplitViewPaneOpen;
-            SettingsPopUpOpenProperty = true;
-        }
-
         public async Task SendMessage()
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
 
             if (PickedFile != null)
             {
@@ -660,12 +639,12 @@ namespace Discord_Mobile.ViewModels
                 TextBoxMessage = "";
             }
 
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public async Task FileButtonClicked()
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
 
             FilePicker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
             FilePicker.FileTypeFilter.Clear();
@@ -693,12 +672,12 @@ namespace Discord_Mobile.ViewModels
                 NotifyPropertyChanged("TopMessage");
             }
 
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public void ShowPrivateMessages()
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
 
             ChannelsVisibility = Visibility.Collapsed;
             GuildSelectedText = "Private Messages";
@@ -709,12 +688,12 @@ namespace Discord_Mobile.ViewModels
             foreach (var dmchannel in dMChannels)
                 DMChannelsList.Add(dmchannel);
             PrivateMessagesVisibility = Visibility.Visible;
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public async Task SelectDMChannel(object sender, ItemClickEventArgs e)
         {
-            LoadingPopUpIsOpen = true;
+            LoadingControlIsOpen = true;
             if (e != null)
                 DMChannel = (SocketDMChannel)e.ClickedItem;
             HasSendMessagePermission = true;
@@ -736,7 +715,7 @@ namespace Discord_Mobile.ViewModels
                 NoChannelVisibility = Visibility.Collapsed;
             else
                 NoChannelMessage = "No Messages...";
-            LoadingPopUpIsOpen = false;
+            LoadingControlIsOpen = false;
         }
 
         public void ShowAttachedFlyoutUsersHolding(object sender, HoldingRoutedEventArgs e)
@@ -844,9 +823,9 @@ namespace Discord_Mobile.ViewModels
 
                 deleteOption.Click += (sender2, e2) =>
                 {
-                    LoadingPopUpIsOpen = true;
+                    LoadingControlIsOpen = true;
                     heldMessage.DeleteAsync();
-                    LoadingPopUpIsOpen = false;
+                    LoadingControlIsOpen = false;
                 };
 
                 myFlyout.Items.Add(copyOption);
@@ -968,11 +947,11 @@ namespace Discord_Mobile.ViewModels
         {
             if (NewTextChannelName != "" && Guild != null)
             {
-                LoadingPopUpIsOpen = true;
+                LoadingControlIsOpen = true;
                 NewTextChannelName = NewTextChannelName.Replace(" ", "_");
                 Guild.CreateTextChannelAsync(NewTextChannelName);
                 NewTextChannelName = "";
-                LoadingPopUpIsOpen = false;
+                LoadingControlIsOpen = false;
             }
         }
 
@@ -1011,13 +990,9 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        public void SetPopUpCenter(object sender, object e)
-        {
-            ScreenHorizontalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Width / 2) - (((Grid)sender).ActualWidth / 2));
-            ScreenVerticalCenter = (int)((ApplicationView.GetForCurrentView().VisibleBounds.Height / 2) - (((Grid)sender).ActualHeight / 2));
-        }
-
         //######################################################################
+
+
 
         private BitmapImage newGuildIcon = new BitmapImage(new Uri("ms-appx://Discord_Mobile/Assets/NoAvatarIcon.png"));
 
@@ -1133,20 +1108,20 @@ namespace Discord_Mobile.ViewModels
             }
         }
 
-        private bool loadingPopUpIsOpen = true;
+        private bool loadingControlIsOpen = true;
 
-        public bool LoadingPopUpIsOpen
+        public bool LoadingControlIsOpen
         {
             get
             {
-                return loadingPopUpIsOpen;
+                return loadingControlIsOpen;
             }
             set
             {
-                if (value != loadingPopUpIsOpen)
+                if (value != loadingControlIsOpen)
                 {
-                    loadingPopUpIsOpen = value;
-                    NotifyPropertyChanged("LoadingPopUpIsOpen");
+                    loadingControlIsOpen = value;
+                    NotifyPropertyChanged("LoadingControlIsOpen");
                 }
             }
         }
@@ -1273,24 +1248,6 @@ namespace Discord_Mobile.ViewModels
                 {
                     hasSendFilePermission = value;
                     NotifyPropertyChanged("HasSendFilePermission");
-                }
-            }
-        }
-
-        private bool settingsPopUpOpenProperty = false;
-
-        public bool SettingsPopUpOpenProperty
-        {
-            get
-            {
-                return settingsPopUpOpenProperty;
-            }
-            set
-            {
-                if (value != settingsPopUpOpenProperty)
-                {
-                    settingsPopUpOpenProperty = value;
-                    NotifyPropertyChanged("SettingsPopUpOpenProperty");
                 }
             }
         }

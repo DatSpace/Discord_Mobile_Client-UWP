@@ -9,7 +9,7 @@ namespace Discord_Mobile.Services
     {
         public static DiscordSocketClient client;
 
-        public static PasswordCredential CheckCredit()
+        public static PasswordCredential GetCredit()
         {
             //Set the creditential equal to nothing.
             PasswordCredential loginCredential = null;
@@ -18,30 +18,12 @@ namespace Discord_Mobile.Services
 
             try
             {
-                //Try to find all creditentials save by their resource name and save it into a List.
-                var credentialList = vault.FindAllByResource("LoginToken");
-                //If there is an element in that list then take the first element.
-                if (credentialList.Count > 0)
-                {
-                    if (credentialList.Count == 1)
-                        loginCredential = credentialList[0];
-                    /*else
-                    {
-                        // When there are multiple usernames,
-                        // retrieve the default username. If one doesn't
-                        // exist, then display UI to have the user select
-                        // a default username.
-
-
-                        credential = vault.Retrieve("LoginToken", null);
-                    }*/
-                }
+                loginCredential = vault.Retrieve("LoginToken", "user");
             }
             catch
             {
-                throw new System.Exception("CheckCredit()");
+                loginCredential = null;
             }
-
             //Return the credential.
             return loginCredential;
 
@@ -49,9 +31,9 @@ namespace Discord_Mobile.Services
 
         public async Task MakeConnectionAsync(string userToken)
         {
-            DiscordSocketConfig Config = new DiscordSocketConfig { MessageCacheSize = 90 };
+            DiscordSocketConfig Config = new DiscordSocketConfig { MessageCacheSize = 60 };
             client = new DiscordSocketClient(Config);
-            
+
             // Configure the client to use a Bot token, and use our token
             await client.LoginAsync(TokenType.User, userToken);
             // Connect the client to Discord's gateway
@@ -67,7 +49,7 @@ namespace Discord_Mobile.Services
         public static void DeleteUser()
         {
             var vault = new PasswordVault();
-            PasswordCredential loginCredential = CheckCredit();
+            PasswordCredential loginCredential = GetCredit();
 
             if (loginCredential != null)
                 vault.Remove(loginCredential);

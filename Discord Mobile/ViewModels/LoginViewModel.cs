@@ -1,4 +1,5 @@
 ﻿using Discord_Mobile.Services;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -22,89 +23,80 @@ namespace Discord_Mobile.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        LoginService loginService = new LoginService();
 
-        public async Task UserLogin()
+        public async Task AutoLogin()
         {
-            LoginService loginService = new LoginService();
+            PasswordCredential loginCredential = LoginService.GetCredit();
 
-            PasswordCredential loginCredential = LoginService.CheckCredit();
-
-            //If the login page is not visible
-            if (LoginUIVisibility == Visibility.Collapsed)
+            //If there is a credential stored
+            if (loginCredential != null)
             {
-                //If there is a credential stored
-                if (loginCredential != null)
-                {
-                    //Get the password into the credential object.
-                    loginCredential.RetrievePassword();
-                    //And try to connect!
-                    try
-                    {
-                        NetworkConnectivityLevel connectionStatus = NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel();
-                        switch (connectionStatus)
-                        {
-                            case NetworkConnectivityLevel.InternetAccess:
-                                await loginService.MakeConnectionAsync(loginCredential.Password);
-                                Frame rootFrame = Window.Current.Content as Frame;
-                                rootFrame.Navigate(typeof(ChatView));
-                                break;
-                            case NetworkConnectivityLevel.ConstrainedInternetAccess:
-                                LoginStatusTextBlock = "Limited Internet Access";
-                                break;
-                            default:
-                                LoginStatusTextBlock = "No Internet Acccess";
-                                break;
-                        }
-                    }
-                    catch
-                    {
-                        LoginStatusTextBlock = "Can't connect at the moment. Sorry :/";
-                    }
-                }
-                // There is no credential stored in the locker.
-                else
-                {
-                    // Display UI to get user credentials.
-                    LoginUIVisibility = Visibility.Visible;
-                }
-            }
-            //That means that the user doesnt have any password saved and the login page is visible
-            else
-            {
+                LoginUIVisibility = Visibility.Collapsed;
+                //Get the password into the credential object.
+                loginCredential.RetrievePassword();
+                //And try to connect!
                 try
                 {
                     NetworkConnectivityLevel connectionStatus = NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel();
                     switch (connectionStatus)
                     {
                         case NetworkConnectivityLevel.InternetAccess:
-                            LoginButtonIsEnabled = false;
-                            await loginService.MakeConnectionAsync(TokenTextBox);
-                            if (RememberMeIsChecked)
-                                LoginService.SaveUser(TokenTextBox);
+                            await loginService.MakeConnectionAsync(loginCredential.Password);
                             Frame rootFrame = Window.Current.Content as Frame;
                             rootFrame.Navigate(typeof(ChatView));
                             break;
                         case NetworkConnectivityLevel.ConstrainedInternetAccess:
-                            ConnectionErrorTextBlock = "Limited Internet Access!";
+                            LoginStatusTextBlock = "Limited Internet Access";
                             break;
                         default:
-                            ConnectionErrorTextBlock = "No Internet Connection!";
+                            LoginStatusTextBlock = "No Internet Acccess";
                             break;
                     }
                 }
                 catch
                 {
-                    LoginButtonIsEnabled = true;
-                    ConnectionErrorTextBlock = "Error! Please re-check the token!";
+                    LoginStatusTextBlock = "Can't connect at the moment. Sorry :/";
                 }
             }
         }
 
+        public async void ManualLogin()
+        {
+            // There is no credential stored in the locker.
+            try
+            {
+                NetworkConnectivityLevel connectionStatus = NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel();
+                switch (connectionStatus)
+                {
+                    case NetworkConnectivityLevel.InternetAccess:
+                        LoginButtonIsEnabled = false;
+                        await loginService.MakeConnectionAsync(TokenTextBox);
+                        if (RememberMeIsChecked)
+                            LoginService.SaveUser(TokenTextBox);
+                        Frame rootFrame = Window.Current.Content as Frame;
+                        rootFrame.Navigate(typeof(ChatView));
+                        break;
+                    case NetworkConnectivityLevel.ConstrainedInternetAccess:
+                        ConnectionErrorTextBlock = "Limited Internet Access!";
+                        break;
+                    default:
+                        ConnectionErrorTextBlock = "No Internet Connection!";
+                        break;
+                }
+            }
+            catch
+            {
+                LoginButtonIsEnabled = true;
+                ConnectionErrorTextBlock = "Error! Please re-check the token!";
+            }
+
+        }
 
         //#################< START OF PROPERTIES >######################
 
-        private Visibility loginUIVisibility = Visibility.Collapsed;
-        public Visibility connectingVisibility = Visibility.Visible;
+        private Visibility loginUIVisibility = Visibility.Visible;
+        public Visibility ConnectingVisibility = Visibility.Collapsed;
 
         public Visibility LoginUIVisibility
         {
@@ -118,9 +110,11 @@ namespace Discord_Mobile.ViewModels
                 if (value != loginUIVisibility)
                 {
                     loginUIVisibility = value;
-                    connectingVisibility = Visibility.Collapsed;
+                    ConnectingVisibility = Visibility.Collapsed;
+                    if (loginUIVisibility == Visibility.Collapsed)
+                        ConnectingVisibility = Visibility.Visible;
                     NotifyPropertyChanged("LoginUIVisibility");
-                    NotifyPropertyChanged("connectingVisibility");
+                    NotifyPropertyChanged("ConnectingVisibility");
                 }
             }
         }
